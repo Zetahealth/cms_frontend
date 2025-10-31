@@ -1,9 +1,155 @@
-import React, { useState, useEffect } from "react";
-// import api from "../lib/api";
-import Api from "../Api/Api";
+// import React, { useState, useEffect } from "react";
+// import Api from "../../Api/Api";
 
-function Admin(){
-  const [screens, setScreens] = useState([]);
+// function Screens() {
+//   const [screens, setScreens] = useState([]);
+//   const [screenName, setScreenName] = useState("");
+//   const [showPopup, setShowPopup] = useState(false);
+//   const [selectedScreen, setSelectedScreen] = useState(null);
+//   const [backgroundFile, setBackgroundFile] = useState(null);
+//   const token = sessionStorage.getItem("authToken");
+
+//   useEffect(() => {
+//     fetchScreens();
+//   }, []);
+
+//   async function fetchScreens() {
+//     const res = await fetch(`${Api}/api/v1/screens`, {
+//       headers: { Authorization: `Bearer ${token}` },
+//     });
+//     const data = await res.json();
+//     setScreens(data);
+//   }
+
+//   async function createScreen(e) {
+//     e.preventDefault();
+//     await fetch(`${Api}/api/v1/screens`, {
+//       method: "POST",
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({ name: screenName }),
+//     });
+//     setScreenName("");
+//     fetchScreens();
+//   }
+
+//   async function deleteScreen(screenId) {
+//     if (!window.confirm("Are you sure?")) return;
+//     await fetch(`${Api}/api/v1/screens/${screenId}`, {
+//       method: "DELETE",
+//       headers: { Authorization: `Bearer ${token}` },
+//     });
+//     fetchScreens();
+//   }
+
+//   async function uploadBackground(e) {
+//     e.preventDefault();
+//     const formData = new FormData();
+//     formData.append("background", backgroundFile);
+//     await fetch(`${Api}/api/v1/screens/${selectedScreen.id}/upload_background`, {
+//       method: "POST",
+//       headers: { Authorization: `Bearer ${token}` },
+//       body: formData,
+//     });
+//     alert("✅ Background uploaded");
+//     setShowPopup(false);
+//     setBackgroundFile(null);
+//     fetchScreens();
+//   }
+
+//   return (
+//     <div className="bg-white shadow-md rounded-2xl p-6">
+//       <h3 className="text-2xl font-semibold mb-4 text-gray-700">Screens</h3>
+
+//       <form onSubmit={createScreen} className="flex gap-3 mb-6">
+//         <input
+//           value={screenName}
+//           onChange={(e) => setScreenName(e.target.value)}
+//           placeholder="Enter screen name"
+//           className="border rounded-lg px-4 py-2 flex-1"
+//         />
+//         <button
+//           type="submit"
+//           className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+//         >
+//           Create
+//         </button>
+//       </form>
+
+
+
+//       <ul className="space-y-4">
+//         {screens.map((s) => (
+//           <li key={s.id} className="border-b pb-2 flex justify-between items-center">
+//             <span className="font-medium">{s.name}</span>
+//             <div className="flex gap-2">
+//               <button
+//                 onClick={() => deleteScreen(s.id)}
+//                 className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+//               >
+//                 Delete
+//               </button>
+//               <button
+//                 onClick={() => {
+//                   setSelectedScreen(s);
+//                   setShowPopup(true);
+//                 }}
+//                 className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+//               >
+//                 Upload Background
+//               </button>
+//             </div>
+//           </li>
+//         ))}
+//       </ul>
+
+//       {showPopup && (
+//         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+//           <div className="bg-white rounded-2xl p-6 shadow-lg w-96 relative">
+//             <h3 className="text-xl font-bold mb-4">
+//               Upload Background for {selectedScreen?.name}
+//             </h3>
+
+//             <form onSubmit={uploadBackground} className="space-y-4">
+//               <input
+//                 type="file"
+//                 accept="image/*"
+//                 onChange={(e) => setBackgroundFile(e.target.files[0])}
+//                 className="w-full border rounded-lg p-2"
+//               />
+//               <div className="flex justify-end gap-3">
+//                 <button
+//                   type="button"
+//                   onClick={() => setShowPopup(false)}
+//                   className="bg-gray-300 px-4 py-2 rounded-lg"
+//                 >
+//                   Cancel
+//                 </button>
+//                 <button
+//                   type="submit"
+//                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+//                 >
+//                   Upload
+//                 </button>
+//               </div>
+//             </form>
+//           </div>
+//         </div>
+//       )}
+
+
+//     </div>
+//   );
+// }
+
+// export default Screens;
+import React, { useState, useEffect } from "react";
+import Api from "../../Api/Api";
+
+function Screens() {
+    const [screens, setScreens] = useState([]);
   const [contents, setContents] = useState([]);
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
@@ -302,84 +448,16 @@ function Admin(){
 
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 p-8">
-        <div className="bg-white shadow-md rounded-2xl p-6 mb-10">
-            {/* Header */}
-            <h2 className="text-3xl font-bold text-blue-700 mb-6">
-                Admin Dashboard
-            </h2>
+    <div className="bg-white shadow-md rounded-2xl p-6">
+      <h3 className="text-2xl font-semibold mb-4 text-gray-700">📺 Screens</h3>
 
-            {/* Upload Section */}
-            <section className="bg-white shadow-md rounded-2xl p-6 mb-10">
-                <h3 className="text-2xl font-semibold mb-4 text-gray-700">
-                Upload Content
-                </h3>
-
-                <form onSubmit={upload} className="space-y-4">
-                <div>
-                    <label className="block font-medium mb-1">Title</label>
+        <section >
+                <h3 className="text-2xl font-semibold mb-4 text-gray-700">Create New Screen</h3>
+                <form onSubmit={createScreen} className="flex gap-3">
                     <input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter content title"
-                    className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    />
-                </div>
-                
-                <div>
-                    <label className="block font-medium mb-1">Content</label>
-                    <textarea
-                        value={contant}
-                        onChange={(e) => setContant(e.target.value)}
-                        placeholder="Enter content details"
-                        className="w-full border rounded-lg px-4 py-2 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    ></textarea>
-                </div>
-
-
-
-                <div>
-                    <label className="block font-medium mb-1">Content Type</label>
-                    <select
-                    value={contentType}
-                    onChange={(e) => setContentType(e.target.value)}
-                    className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    >
-                    <option value="image">Image</option>
-                    <option value="video">Video</option>
-                    <option value="html">HTML</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label className="block font-medium mb-1">Upload Files</label>
-                    <input
-                    type="file"
-                    multiple
-                    onChange={(e) => setFile(e.target.files)}
-                    className="block w-full text-gray-600 border border-dashed border-gray-400 rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-100"
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold transition duration-200"
-                >
-                    Upload
-                </button>
-                </form>
-            </section>
-
-            <section className="bg-white shadow-md rounded-2xl p-6 mb-10">
-                <h3 className="text-2xl font-semibold mb-4 text-gray-700">
-                    Screen Containers
-                </h3>
-
-                <form onSubmit={createContainer} className="flex gap-3 mb-4">
-                    <input
-                    value={containerName}
-                    onChange={(e) => setContainerName(e.target.value)}
-                    placeholder="Enter container name"
+                    value={screenName}
+                    onChange={(e) => setScreenName(e.target.value)}
+                    placeholder="Enter screen name"
                     className="border rounded-lg px-4 py-2 flex-1"
                     />
                     <button
@@ -389,45 +467,10 @@ function Admin(){
                     Create
                     </button>
                 </form>
+        </section>
 
-                {containers.map((container) => (
-                    <div key={container.id} className="border rounded-lg p-4 mb-4">
-                    <h4 className="text-xl font-bold mb-2">{container.name}</h4>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                        {screens.map((s) => {
-                        const assigned = container.screens?.some((sc) => sc.id === s.id);
-                        return (
-                            <button
-                            key={s.id}
-                            onClick={() =>
-                                assigned
-                                ? unassignScreenFromContainer(container.id, s.id)
-                                : assignScreenToContainer(container.id, s.id)
-                            }
-                            className={`px-4 py-2 rounded-lg ${
-                                assigned
-                                ? "bg-red-500 text-white hover:bg-red-600"
-                                : "bg-blue-500 text-white hover:bg-blue-600"
-                            }`}
-                            >
-                            {s.name}
-                            </button>
-                        );
-                        })}
-                    </div>
-                    <p className="text-sm text-gray-500">
-                        Assigned:{" "}
-                        {container.screens.length
-                        ? container.screens.map((sc) => sc.name).join(", ")
-                        : "None"}
-                    </p>
-                    </div>
-                ))}
-            </section>
-
-            {/* Screens Section */}
-            <section className="bg-white shadow-md rounded-2xl p-6 mb-10">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-700">Screens</h3>
+        <section className="mt-10">
+            <h3 className="text-2xl font-semibold mb-4 text-gray-700">Availabe Screens</h3>
             {screens.length === 0 ? (
                 <p className="text-gray-500">No screens available.</p>
             ) : (
@@ -478,133 +521,44 @@ function Admin(){
                 ))}
                 </ul>
             )}
-            </section>
+        </section>
 
-            {/* ✅ Popup Modal */}
-            {showPopup && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-2xl p-6 shadow-lg w-96 relative">
-                    <h3 className="text-xl font-bold mb-4">
-                    Upload Background for {selectedScreen?.name}
-                    </h3>
+        {/* ✅ Popup Modal */}
+        {showPopup && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 shadow-lg w-96 relative">
+                <h3 className="text-xl font-bold mb-4">
+                Upload Background for {selectedScreen?.name}
+                </h3>
 
-                    <form onSubmit={uploadBackground} className="space-y-4">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setBackgroundFile(e.target.files[0])}
-                        className="w-full border rounded-lg p-2"
-                    />
-                    <div className="flex justify-end gap-3">
-                        <button
-                        type="button"
-                        onClick={() => setShowPopup(false)}
-                        className="bg-gray-300 px-4 py-2 rounded-lg"
-                        >
-                        Cancel
-                        </button>
-                        <button
-                        type="submit"
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                        >
-                        Upload
-                        </button>
-                    </div>
-                    </form>
-                </div>
-                </div>
-            )}
-
-            {/* Contents Section */}
-            <section className="bg-white shadow-md rounded-2xl p-6">
-            <h3 className="text-2xl font-semibold mb-4 text-gray-700">Contents</h3>
-            {contents.length === 0 ? (
-                <p className="text-gray-500">No contents uploaded yet.</p>
-            ) : (
-                <ul className="space-y-6">
-                {contents.map((c) => (
-                    <li
-                    key={`content-${c.id}`}
-                    className="border border-gray-200 p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200"
+                <form onSubmit={uploadBackground} className="space-y-4">
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setBackgroundFile(e.target.files[0])}
+                    className="w-full border rounded-lg p-2"
+                />
+                <div className="flex justify-end gap-3">
+                    <button
+                    type="button"
+                    onClick={() => setShowPopup(false)}
+                    className="bg-gray-300 px-4 py-2 rounded-lg"
                     >
-                    <div className="flex justify-between items-center mb-2">
-                        <h4 className="text-lg font-semibold">{c.title}</h4>
-                        <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full capitalize">
-                        {c.content_type}
-                        </span>
-                    </div>
-
-                    <div className="mt-3">
-                        <span className="block text-gray-600 mb-2 font-medium">Assign to:</span>
-                        <div className="flex flex-wrap gap-3">
-                        {screens.map((s) => {
-                            // Find assigned content for this screen & this content only
-                            const isAssigned = assignments[s.id]?.some(
-                            (assigned) => assigned.id === c.id
-                            );
-
-                            return (
-                            <div key={`screen-${s.id}-content-${c.id}`} className="flex items-center gap-2">
-                                {/* Assign / Unassign button */}
-                                <button
-                                onClick={() =>
-                                    isAssigned ? unassign(c.id, s.id) : assign(s.id, c.id)
-                                }
-                                className={`px-4 py-1 rounded-lg transition duration-200 ${
-                                    isAssigned
-                                    ? "bg-red-500 text-white hover:bg-red-600"
-                                    : "bg-blue-500 text-white hover:bg-blue-600"
-                                }`}
-                                >
-                                {s.name}
-                                </button>
-
-                                {/* Show assigned label */}
-                                {isAssigned && (
-                                <span className="ml-2 px-2 py-1 bg-blue-100 rounded flex items-center gap-1">
-                                    Assigned
-                                </span>
-                                )}
-                            </div>
-                            );
-                        })}
-                        </div>
-                    </div>
-                    </li>
-                ))}
-                </ul>
-            )}
-            </section>
-
-
-            {/* Screen Create Form */}
-            <section className="bg-white shadow-md rounded-2xl p-6 mb-10">
-                <h3 className="text-2xl font-semibold mb-4 text-gray-700">Create New Screen</h3>
-                <form onSubmit={createScreen} className="flex gap-3">
-                    <input
-                    value={screenName}
-                    onChange={(e) => setScreenName(e.target.value)}
-                    placeholder="Enter screen name"
-                    className="border rounded-lg px-4 py-2 flex-1"
-                    />
+                    Cancel
+                    </button>
                     <button
                     type="submit"
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                     >
-                    Create
+                    Upload
                     </button>
+                </div>
                 </form>
-            </section>
-
-            {/* ✅ Popup Modal */}
-            
-
-
-        </div>
+            </div>
+            </div>
+        )}
     </div>
-  )
+  );
 }
 
-export default Admin;
-
-
+export default Screens;

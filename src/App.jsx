@@ -31,7 +31,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ScreenView from "./pages/ScreenView";
 import Admin from "./pages/Admin";
 import PrivateRoute from "./pages/PrivateRoute";
-
+import AdminLayout from "././pages/Admin/AdminLayout"
 
 function App() {
   const token = sessionStorage.getItem("authToken");
@@ -46,7 +46,7 @@ function App() {
           element={
             token ? (
               role === "admin" ? (
-                <Navigate to="/admin" />
+                <Navigate to="/adminss" />
               ) : (
                 <Navigate to="/dashboard" />
               )
@@ -58,6 +58,10 @@ function App() {
         <Route path="/signup" element={<Signup />} />
 
         <Route path="/login" element={<Login />} />
+
+
+        <Route path="/admin" element={<AdminLayout />} />
+        <Route path="/admin/*" element={<AdminLayout />} />
 
         {/* <Route 
           path="/screen/:slug" 
