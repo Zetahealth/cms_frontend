@@ -1650,80 +1650,105 @@ function ScreenView() {
         }}
       >
         <AnimatePresence mode="wait">
-          {contents.map((c, idx) => (
-            <motion.div
-              key={c.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8, delay: idx * 0.2 }}
-              style={{
-                ...getPositionStyle(c.position),
-                background: "rgba(0, 0, 0, 0.6)",
-                padding: "20px",
-                borderRadius: "12px",
-                maxWidth: "35%",
-                color: "white",
-                textAlign: "center",
-              }}
-            >
-              {/* Image Content */}
-              {c.content_type === "image" &&
-                c.files.map((f, i) => (
-                  <motion.img
-                    key={i}
-                    src={f}
-                    alt=""
-                    style={{
-                      width: "100%",
-                      borderRadius: 8,
-                      marginBottom: 10,
-                    }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                  />
-                ))}
+          {contents.map((c, idx) => {
+            // auto scale depending on number of contents
+            const scaleFactor =
+              contents.length <= 2
+                ? 1
+                : contents.length <= 4
+                ? 0.9
+                : contents.length <= 6
+                ? 0.8
+                : contents.length <= 8
+                ? 0.7
+                : 0.6; // shrink gradually
 
-              {/* Video Content */}
-              {c.content_type === "video" &&
-                c.files.map((f, i) => (
-                  <motion.video
-                    key={i}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
+            return (
+              <motion.div
+                key={c.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8, delay: idx * 0.2 }}
+                style={{
+                  ...getPositionStyle(c.position),
+                  background: "rgba(0, 0, 0, 0.6)",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  color: "white",
+                  textAlign: "center",
+                  width: `${35 * scaleFactor}%`,
+                  maxWidth: "420px",
+                  minWidth: "200px",
+                  boxSizing: "border-box",
+                }}
+              >
+                {/* Image Content */}
+                {c.content_type === "image" &&
+                  c.files.map((f, i) => (
+                    <motion.img
+                      key={i}
+                      src={f}
+                      alt=""
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        maxHeight: "250px",
+                        objectFit: "contain",
+                        borderRadius: 8,
+                        marginBottom: 10,
+                      }}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.8, delay: 0.2 }}
+                    />
+                  ))}
+
+                {/* Video Content */}
+                {c.content_type === "video" &&
+                  c.files.map((f, i) => (
+                    <motion.video
+                      key={i}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        maxHeight: "250px",
+                        borderRadius: 10,
+                        marginBottom: 10,
+                        objectFit: "contain",
+                      }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 1 }}
+                    >
+                      <source src={f} type="video/mp4" />
+                    </motion.video>
+                  ))}
+
+                {/* Text Content */}
+                {c.content && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
                     style={{
-                      width: "100%",
-                      borderRadius: 10,
-                      marginBottom: 10,
+                      fontSize: "clamp(12px, 1.5vw, 18px)",
+                      color: "#fff",
+                      lineHeight: 1.4,
+                      wordBreak: "break-word",
                     }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1 }}
                   >
-                    <source src={f} type="video/mp4" />
-                  </motion.video>
-                ))}
+                    {c.content}
+                  </motion.p>
+                )}
+              </motion.div>
+            );
+          })}
 
-              {/* Text Content */}
-              {c.content && (
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
-                  style={{
-                    fontSize: 16,
-                    color: "#fff",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {c.content}
-                </motion.p>
-              )}
-            </motion.div>
-          ))}
         </AnimatePresence>
 
         {/* --- Navigation Buttons --- */}

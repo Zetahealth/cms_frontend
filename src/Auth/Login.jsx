@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import Api from "../Api/Api";
+import logo from "../../public/logo3.png";
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -94,9 +95,55 @@ export default function Login() {
 
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
+    // <div className="flex items-center justify-center h-screen bg-gray-100">
+    //   <div className="bg-white shadow-lg rounded-lg p-8 w-96">
+    //     <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+    //     <form onSubmit={handleLogin} className="flex flex-col gap-4">
+    //       <input
+    //         type="email"
+    //         placeholder="Email"
+    //         className="border rounded-lg px-4 py-2"
+    //         value={email}
+    //         onChange={(e) => setEmail(e.target.value)}
+    //         required
+    //       />
+    //       <input
+    //         type="password"
+    //         placeholder="Password"
+    //         className="border rounded-lg px-4 py-2"
+    //         value={password}
+    //         onChange={(e) => setPassword(e.target.value)}
+    //         required
+    //       />
+    //       {error && <p className="text-red-500 text-sm">{error}</p>}
+    //       <button
+    //         type="submit"
+    //         className="bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700"
+    //       >
+    //         Login
+    //       </button>
+    //     </form>
+    //     <p className="text-sm mt-4 text-center">
+    //       Don't have an account?{" "}
+    //       <Link to="/signup" className="text-blue-600 hover:underline">
+    //         Sign up
+    //       </Link>
+    //     </p>
+    //   </div>
+    // </div>
+     <div className="flex items-center justify-center h-screen bg-gray-100">
       <div className="bg-white shadow-lg rounded-lg p-8 w-96">
+        {/* --- Logo Section --- */}
+        <div className="flex justify-center mb-4">
+          <img
+            src={logo}
+            alt="App Logo"
+            className="h-16 w-auto object-contain"
+          />
+        </div>
+
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <input
             type="email"
@@ -115,15 +162,17 @@ export default function Login() {
             required
           />
           {error && <p className="text-red-500 text-sm">{error}</p>}
+
           <button
             type="submit"
-            className="bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700"
+            className="bg-blue-600 text-white rounded-lg py-2 hover:bg-blue-700 transition-colors"
           >
             Login
           </button>
         </form>
+
         <p className="text-sm mt-4 text-center">
-          Don't have an account?{" "}
+          Don’t have an account?{" "}
           <Link to="/signup" className="text-blue-600 hover:underline">
             Sign up
           </Link>
