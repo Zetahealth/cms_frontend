@@ -102,6 +102,7 @@ function UploadContent() {
   const [file, setFile] = useState(null);
   const [position, setPosition] = useState("Center"); // ✅ Added position
   const token = sessionStorage.getItem("authToken");
+  const [hyperlink, setHyperlink] = useState("");
 
   async function upload(e) {
     e.preventDefault();
@@ -111,6 +112,8 @@ function UploadContent() {
       form.append("content", content);
       form.append("content_type", contentType);
       form.append("position", position); // ✅ Send position to backend
+      form.append("hyperlink", hyperlink);
+
       if (file) for (const f of file) form.append("files[]", f);
 
       const res = await fetch(`${Api}/api/v1/contents`, {
@@ -186,6 +189,17 @@ function UploadContent() {
             <option value="Bottom-Right">Bottom-Right</option>
             <option value="Center">Center</option>
           </select>
+        </div>
+
+        <div>
+          <label className="block font-medium mb-1">External Link (for QR)</label>
+          <input
+            type="url"
+            value={hyperlink}
+            onChange={(e) => setHyperlink(e.target.value)}
+            placeholder="Enter external link (optional)"
+            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
         </div>
 
         {/* --- File Upload --- */}
