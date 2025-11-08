@@ -308,6 +308,58 @@ function Contents() {
             {contents.length === 0 ? (
                 <p className="text-gray-500">No contents uploaded yet.</p>
             ) : (
+                // <ul className="space-y-6">
+                // {contents.map((c) => (
+                //     <li
+                //     key={`content-${c.id}`}
+                //     className="border border-gray-200 p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200"
+                //     >
+                //     <div className="flex justify-between items-center mb-2">
+                //         <h4 className="text-lg font-semibold">{c.title}</h4>
+                //         <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full capitalize">
+                //         {c.content_type}
+                //         </span>
+                //     </div>
+
+                //     <div className="mt-3">
+                //         <span className="block text-gray-600 mb-2 font-medium">Assign to:</span>
+                //         <div className="flex flex-wrap gap-3">
+                //         {screens.map((s) => {
+                //             // Find assigned content for this screen & this content only
+                //             const isAssigned = assignments[s.id]?.some(
+                //             (assigned) => assigned.id === c.id
+                //             );
+
+                //             return (
+                //             <div key={`screen-${s.id}-content-${c.id}`} className="flex items-center gap-2">
+                //                 {/* Assign / Unassign button */}
+                //                 <button
+                //                 onClick={() =>
+                //                     isAssigned ? unassign(c.id, s.id) : assign(s.id, c.id)
+                //                 }
+                //                 className={`px-4 py-1 rounded-lg transition duration-200 ${
+                //                     isAssigned
+                //                     ? "bg-red-500 text-white hover:bg-red-600"
+                //                     : "bg-blue-500 text-white hover:bg-blue-600"
+                //                 }`}
+                //                 >
+                //                 {s.name}
+                //                 </button>
+
+                //                 {/* Show assigned label */}
+                //                 {isAssigned && (
+                //                 <span className="ml-2 px-2 py-1 bg-blue-100 rounded flex items-center gap-1">
+                //                     Assigned
+                //                 </span>
+                //                 )}
+                //             </div>
+                //             );
+                //         })}
+                //         </div>
+                //     </div>
+                //     </li>
+                // ))}
+                // </ul>
                 <ul className="space-y-6">
                 {contents.map((c) => (
                     <li
@@ -315,24 +367,35 @@ function Contents() {
                     className="border border-gray-200 p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200"
                     >
                     <div className="flex justify-between items-center mb-2">
+                        <div>
                         <h4 className="text-lg font-semibold">{c.title}</h4>
                         <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full capitalize">
-                        {c.content_type}
+                            {c.content_type}
                         </span>
+                        </div>
+
+                        {/* 🗑️ DELETE BUTTON */}
+                        <button
+                        onClick={() => deleteContent(c.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition duration-200"
+                        >
+                        Delete
+                        </button>
                     </div>
 
                     <div className="mt-3">
                         <span className="block text-gray-600 mb-2 font-medium">Assign to:</span>
                         <div className="flex flex-wrap gap-3">
                         {screens.map((s) => {
-                            // Find assigned content for this screen & this content only
                             const isAssigned = assignments[s.id]?.some(
                             (assigned) => assigned.id === c.id
                             );
 
                             return (
-                            <div key={`screen-${s.id}-content-${c.id}`} className="flex items-center gap-2">
-                                {/* Assign / Unassign button */}
+                            <div
+                                key={`screen-${s.id}-content-${c.id}`}
+                                className="flex items-center gap-2"
+                            >
                                 <button
                                 onClick={() =>
                                     isAssigned ? unassign(c.id, s.id) : assign(s.id, c.id)
@@ -346,7 +409,6 @@ function Contents() {
                                 {s.name}
                                 </button>
 
-                                {/* Show assigned label */}
                                 {isAssigned && (
                                 <span className="ml-2 px-2 py-1 bg-blue-100 rounded flex items-center gap-1">
                                     Assigned
@@ -360,6 +422,7 @@ function Contents() {
                     </li>
                 ))}
                 </ul>
+
             )}
         </section>
     </div>

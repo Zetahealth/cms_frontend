@@ -352,11 +352,11 @@ function Screens() {
             console.error("❌ Error assigning content:", err);
         }
     }
-    async function deleteScreen(screenId) {
-        if(!window.confirm("Are you sure to delete screen?")) return;
-        await fetch(`${Api}/api/v1/screens/${screenId}`, { method: "DELETE", headers: {"Authorization": `Bearer ${token}`} });
-        fetchScreens();
-    }
+    // async function deleteScreen(screenId) {
+    //     if(!window.confirm("Are you sure to delete screen?")) return;
+    //     await fetch(`${Api}/api/v1/screens/${screenId}`, { method: "DELETE", headers: {"Authorization": `Bearer ${token}`} });
+    //     fetchScreens();
+    // }
 
     async function deleteContent(contentId) {
         if(!window.confirm("Are you sure to delete content?")) return;
@@ -366,7 +366,7 @@ function Screens() {
     }
 
     async function deleteScreen(screenId) {
-        if(!window.confirm("Are you sure to delete screen?")) return;
+        if(!window.confirm("Are you sure you want to delete this screen? (Note: please remove the screen from the container if it is assigned.)")) return;
         await fetch(`${Api}/api/v1/screens/${screenId}`, { 
             method: "DELETE", 
             headers: {"Authorization": `Bearer ${token}`} 

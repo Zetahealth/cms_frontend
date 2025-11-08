@@ -75,7 +75,7 @@ export default function Login() {
 
         // Navigate based on role
         if (roleName === "admin") {
-          navigate("/admin");
+          navigate("/admin/screens");
         } else {
           navigate("/dashboard");
         }

@@ -1,4 +1,3 @@
-
-// const Api = "https://backend.bytesexchange.com"
-const Api = "http://localhost:3000"
+const Api =  "https://backendafp.connectorcore.com/"
+// const Api = "http://localhost:3000"
 export default Api;
