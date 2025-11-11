@@ -46,7 +46,7 @@ function App() {
           element={
             token ? (
               role === "admin" ? (
-                <Navigate to="/adminss" />
+                <Navigate to="/admin" />
               ) : (
                 <Navigate to="/dashboard" />
               )
@@ -60,8 +60,19 @@ function App() {
         <Route path="/login" element={<Login />} />
 
 
-        <Route path="/admin" element={<AdminLayout />} />
-        <Route path="/admin/*" element={<AdminLayout />} />
+        <Route path="/admin" element={
+          <PrivateRoute role="admin">
+          <AdminLayout />
+          </PrivateRoute>
+        }   
+        />
+        
+        <Route path="/admin/*" element={
+          <PrivateRoute role="admin">
+          <AdminLayout />
+          </PrivateRoute>
+        } 
+        />
 
         {/* <Route 
           path="/screen/:slug" 

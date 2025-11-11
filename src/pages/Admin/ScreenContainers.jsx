@@ -302,7 +302,7 @@ function ScreenContainers() {
 
   return (
     <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Screen Containers</h2>
+        {/* <h2 className="text-xl font-semibold mb-4">Screen Containers</h2> */}
 
         <section className="bg-white shadow-md rounded-2xl p-6 mb-10">
             <h3 className="text-2xl font-semibold mb-4 text-gray-700">

@@ -301,7 +301,7 @@ function Contents() {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Container Screens Viewer</h2>
+      {/* <h2 className="text-xl font-semibold mb-4">Container Screens Viewer</h2> */}
 
         <section className="bg-white shadow-md rounded-2xl p-6">
             <h3 className="text-2xl font-semibold mb-4 text-gray-700">Contents</h3>

@@ -89,14 +89,6 @@ export default function Login() {
 
 
 
-
-
-
-
-
-
-
-
   return (
     // <div className="flex items-center justify-center h-screen bg-gray-100">
     //   <div className="bg-white shadow-lg rounded-lg p-8 w-96">
@@ -141,7 +133,7 @@ export default function Login() {
           <img
             src={logo}
             alt="App Logo"
-            className="h-16 w-auto object-contain"
+            className="h-28 w-auto object-contain"
           />
         </div>
 

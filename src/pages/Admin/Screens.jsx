@@ -449,7 +449,7 @@ function Screens() {
 
   return (
     <div className="bg-white shadow-md rounded-2xl p-6">
-      <h3 className="text-2xl font-semibold mb-4 text-gray-700">📺 Screens</h3>
+      {/* <h3 className="text-2xl font-semibold mb-4 text-gray-700">📺 Screens</h3> */}
 
         <section >
                 <h3 className="text-2xl font-semibold mb-4 text-gray-700">Create New Screen</h3>
