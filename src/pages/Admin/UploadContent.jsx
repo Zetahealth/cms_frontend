@@ -260,12 +260,97 @@ function UploadContent() {
   const [hyperlink, setHyperlink] = useState("");
   const [transitionEffect, setTransitionEffect] = useState("fade");
   const [loading, setLoading] = useState(false); // ✅ loader state
+  const [errors, setErrors] = useState({});
+
 
   const token = sessionStorage.getItem("authToken");
 
+  // async function upload(e) {
+  //   e.preventDefault();
+  //   setLoading(true); // show loader
+
+  //   try {
+  //     const form = new FormData();
+  //     form.append("title", title);
+  //     form.append("content", content);
+  //     form.append("content_type", contentType);
+  //     form.append("position", position);
+  //     form.append("hyperlink", hyperlink);
+  //     form.append("transition_effect", transitionEffect);
+
+  //     // ✅ FIXED: append files correctly (no duplication)
+  //     if (file && file.length > 0) {
+  //       Array.from(file).forEach((f) => form.append("files", f)); // no []
+  //     }
+
+  //     const res = await fetch(`${Api}/api/v1/contents`, {
+  //       method: "POST",
+  //       headers: { Authorization: `Bearer ${token}` },
+  //       body: form,
+  //     });
+
+  //     if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+
+  //     alert("✅ Content uploaded successfully!");
+
+  //     // Reset form
+  //     setTitle("");
+  //     setContent("");
+  //     setFile(null);
+  //     setPosition("Center");
+  //     setHyperlink("");
+  //     setTransitionEffect("fade");
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("❌ Failed to upload content. Check console for details.");
+  //   } finally {
+  //     setLoading(false); // hide loader
+  //   }
+  // }
+
   async function upload(e) {
     e.preventDefault();
-    setLoading(true); // show loader
+    setLoading(true);
+
+    let validationErrors = {};
+
+    // Title required
+    if (!title.trim()) validationErrors.title = "Title is required";
+
+    // Content type required
+    if (!contentType) validationErrors.contentType = "Content type is required";
+
+    // File required
+    if (!file || file.length === 0) {
+      validationErrors.file = "You must upload one file";
+    } else {
+      // Validate each file
+      Array.from(file).forEach((f) => {
+        if (f.size > 100 * 1024 * 1024) {
+          validationErrors.file = "Each file must be under 100 MB";
+        }
+        if (contentType === "image" && !f.type.startsWith("image/")) {
+          validationErrors.file = "Selected content type is Image but file is not an image";
+        }
+        if (contentType === "video" && !f.type.startsWith("video/")) {
+          validationErrors.file = "Selected content type is Video but file is not a video";
+        }
+      });
+    }
+
+    // URL format validation
+    if (hyperlink && !/^https?:\/\/\S+$/.test(hyperlink)) {
+      validationErrors.hyperlink = "Enter a valid URL starting with http:// or https://";
+    }
+
+    // Show errors and stop
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setLoading(false);
+      return;
+    }
+
+    setErrors({}); // Clear errors if all good
 
     try {
       const form = new FormData();
@@ -276,10 +361,7 @@ function UploadContent() {
       form.append("hyperlink", hyperlink);
       form.append("transition_effect", transitionEffect);
 
-      // ✅ FIXED: append files correctly (no duplication)
-      if (file && file.length > 0) {
-        Array.from(file).forEach((f) => form.append("files", f)); // no []
-      }
+      Array.from(file).forEach((f) => form.append("files", f));
 
       const res = await fetch(`${Api}/api/v1/contents`, {
         method: "POST",
@@ -287,11 +369,11 @@ function UploadContent() {
         body: form,
       });
 
-      if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+      if (!res.ok) throw new Error("Upload failed");
 
       alert("✅ Content uploaded successfully!");
 
-      // Reset form
+      // Reset fields
       setTitle("");
       setContent("");
       setFile(null);
@@ -300,11 +382,12 @@ function UploadContent() {
       setTransitionEffect("fade");
     } catch (err) {
       console.error(err);
-      alert("❌ Failed to upload content. Check console for details.");
+      alert("❌ Upload failed! Check console.");
     } finally {
-      setLoading(false); // hide loader
+      setLoading(false);
     }
   }
+
 
   return (
     <div className="bg-white shadow-md rounded-2xl p-6 relative">
@@ -338,49 +421,52 @@ function UploadContent() {
       <h3 className="text-2xl font-semibold mb-4 text-gray-700">Upload Content</h3>
 
       <form onSubmit={upload} className="space-y-4">
-        {/* --- Title --- */}
+
+        {/* Title */}
         <div>
           <label className="block font-medium mb-1">Title</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            className="w-full border rounded-lg px-4 py-2"
             placeholder="Enter content title"
-            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
           />
+          {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
         </div>
 
-        {/* --- Description --- */}
+        {/* Description */}
         <div>
           <label className="block font-medium mb-1">Content</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Enter content details"
-            className="w-full border rounded-lg px-4 py-2 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border rounded-lg px-4 py-2 h-32"
           />
         </div>
 
-        {/* --- Content Type --- */}
+        {/* Content Type */}
         <div>
           <label className="block font-medium mb-1">Content Type</label>
           <select
             value={contentType}
             onChange={(e) => setContentType(e.target.value)}
-            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border rounded-lg px-4 py-2"
           >
             <option value="image">Image</option>
             <option value="video">Video</option>
           </select>
+          {errors.contentType && (
+            <p className="text-red-500 text-sm">{errors.contentType}</p>
+          )}
         </div>
 
-        {/* --- Position --- */}
+        {/* Position */}
         <div>
           <label className="block font-medium mb-1">Position</label>
           <select
             value={position}
             onChange={(e) => setPosition(e.target.value)}
-            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border rounded-lg px-4 py-2"
           >
             <option value="Top-Left">Top-Left</option>
             <option value="Top-Right">Top-Right</option>
@@ -390,56 +476,61 @@ function UploadContent() {
           </select>
         </div>
 
-        {/* --- QR Link --- */}
+        {/* Hyperlink */}
         <div>
           <label className="block font-medium mb-1">External Link (for QR)</label>
           <input
             type="url"
             value={hyperlink}
             onChange={(e) => setHyperlink(e.target.value)}
-            placeholder="Enter external link (optional)"
-            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="Enter valid URL"
           />
+          {errors.hyperlink && (
+            <p className="text-red-500 text-sm">{errors.hyperlink}</p>
+          )}
         </div>
 
-        {/* --- Transition Effect --- */}
+        {/* Transition Effect */}
         <div>
           <label className="block font-medium mb-1">Transition Effect</label>
           <select
             value={transitionEffect}
             onChange={(e) => setTransitionEffect(e.target.value)}
-            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border rounded-lg px-4 py-2"
           >
             <option value="fade">Fade</option>
             <option value="zoom">Zoom</option>
-            <option value="slide-left">Slide from Left</option>
-            <option value="slide-right">Slide from Right</option>
+            <option value="slide-left">Slide Left</option>
+            <option value="slide-right">Slide Right</option>
             <option value="slide-up">Slide Up</option>
           </select>
         </div>
 
-        {/* --- File Upload --- */}
+        {/* File Upload */}
         <div>
           <label className="block font-medium mb-1">Upload Files</label>
           <input
             type="file"
             multiple
             onChange={(e) => setFile(e.target.files)}
-            className="block w-full text-gray-600 border border-dashed border-gray-400 rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-100"
+            className="w-full border border-dashed px-4 py-3 rounded-lg"
           />
+          {errors.file && <p className="text-red-500 text-sm">{errors.file}</p>}
         </div>
 
-        {/* --- Submit --- */}
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
-          className={`${
-            loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
-          } text-white px-6 py-2 rounded-lg font-semibold transition duration-200`}
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg"
         >
           {loading ? "Uploading..." : "Upload"}
         </button>
+
       </form>
+
+      
     </div>
   );
 }

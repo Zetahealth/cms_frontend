@@ -1,150 +1,3 @@
-// import React, { useState, useEffect } from "react";
-// import Api from "../../Api/Api";
-
-// function Screens() {
-//   const [screens, setScreens] = useState([]);
-//   const [screenName, setScreenName] = useState("");
-//   const [showPopup, setShowPopup] = useState(false);
-//   const [selectedScreen, setSelectedScreen] = useState(null);
-//   const [backgroundFile, setBackgroundFile] = useState(null);
-//   const token = sessionStorage.getItem("authToken");
-
-//   useEffect(() => {
-//     fetchScreens();
-//   }, []);
-
-//   async function fetchScreens() {
-//     const res = await fetch(`${Api}/api/v1/screens`, {
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-//     const data = await res.json();
-//     setScreens(data);
-//   }
-
-//   async function createScreen(e) {
-//     e.preventDefault();
-//     await fetch(`${Api}/api/v1/screens`, {
-//       method: "POST",
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({ name: screenName }),
-//     });
-//     setScreenName("");
-//     fetchScreens();
-//   }
-
-//   async function deleteScreen(screenId) {
-//     if (!window.confirm("Are you sure?")) return;
-//     await fetch(`${Api}/api/v1/screens/${screenId}`, {
-//       method: "DELETE",
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-//     fetchScreens();
-//   }
-
-//   async function uploadBackground(e) {
-//     e.preventDefault();
-//     const formData = new FormData();
-//     formData.append("background", backgroundFile);
-//     await fetch(`${Api}/api/v1/screens/${selectedScreen.id}/upload_background`, {
-//       method: "POST",
-//       headers: { Authorization: `Bearer ${token}` },
-//       body: formData,
-//     });
-//     alert("✅ Background uploaded");
-//     setShowPopup(false);
-//     setBackgroundFile(null);
-//     fetchScreens();
-//   }
-
-//   return (
-//     <div className="bg-white shadow-md rounded-2xl p-6">
-//       <h3 className="text-2xl font-semibold mb-4 text-gray-700">Screens</h3>
-
-//       <form onSubmit={createScreen} className="flex gap-3 mb-6">
-//         <input
-//           value={screenName}
-//           onChange={(e) => setScreenName(e.target.value)}
-//           placeholder="Enter screen name"
-//           className="border rounded-lg px-4 py-2 flex-1"
-//         />
-//         <button
-//           type="submit"
-//           className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
-//         >
-//           Create
-//         </button>
-//       </form>
-
-
-
-//       <ul className="space-y-4">
-//         {screens.map((s) => (
-//           <li key={s.id} className="border-b pb-2 flex justify-between items-center">
-//             <span className="font-medium">{s.name}</span>
-//             <div className="flex gap-2">
-//               <button
-//                 onClick={() => deleteScreen(s.id)}
-//                 className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-//               >
-//                 Delete
-//               </button>
-//               <button
-//                 onClick={() => {
-//                   setSelectedScreen(s);
-//                   setShowPopup(true);
-//                 }}
-//                 className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-//               >
-//                 Upload Background
-//               </button>
-//             </div>
-//           </li>
-//         ))}
-//       </ul>
-
-//       {showPopup && (
-//         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-//           <div className="bg-white rounded-2xl p-6 shadow-lg w-96 relative">
-//             <h3 className="text-xl font-bold mb-4">
-//               Upload Background for {selectedScreen?.name}
-//             </h3>
-
-//             <form onSubmit={uploadBackground} className="space-y-4">
-//               <input
-//                 type="file"
-//                 accept="image/*"
-//                 onChange={(e) => setBackgroundFile(e.target.files[0])}
-//                 className="w-full border rounded-lg p-2"
-//               />
-//               <div className="flex justify-end gap-3">
-//                 <button
-//                   type="button"
-//                   onClick={() => setShowPopup(false)}
-//                   className="bg-gray-300 px-4 py-2 rounded-lg"
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   type="submit"
-//                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-//                 >
-//                   Upload
-//                 </button>
-//               </div>
-//             </form>
-//           </div>
-//         </div>
-//       )}
-
-
-//     </div>
-//   );
-// }
-
-// export default Screens;
 import React, { useState, useEffect } from "react";
 import Api from "../../Api/Api";
 
@@ -159,6 +12,7 @@ function Screens() {
   const role = sessionStorage.getItem("role");
   const [screenName, setScreenName] = useState("");
   const [assignments, setAssignments] = useState({}); // {screenId: [contents]}
+  const [displayMode, setDisplayMode] = useState("normal-view");
 
 
   const [showPopup, setShowPopup] = useState(false);
@@ -169,6 +23,19 @@ function Screens() {
   const [containers, setContainers] = useState([]);
   const [containerName, setContainerName] = useState("");
 
+  const [screenTitle, setScreenTitle] = useState("");
+  const [cardImage, setCardImage] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4; // YOU CAN CHANGE → 5 per page
+
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentScreens = screens.slice(indexOfFirst, indexOfLast);
+
+  const totalPages = Math.ceil(screens.length / itemsPerPage);
+
+  const [errors, setErrors] = useState({});
 
 
 
@@ -227,62 +94,104 @@ function Screens() {
     }
     }
 
-    async function unassign(contentId, screenId) {
-        console.log("Trying to unassign:", contentId, screenId);
 
-        try {
-            console.log('assignments:', assignments);
-            console.log('assignments type:', typeof assignments);
 
-            // Get assignments array for the screen, fallback to empty array
-            const screenAssignments = assignments[screenId] || [];
+    // async function createScreen(e) {
+    //     e.preventDefault();
 
-            // Flatten nested structure if needed
-            const flattenedAssignments = screenAssignments.flatMap(a => 
-                Array.isArray(a) ? a : [a]
-            );
+    //     try {
+    //         const formData = new FormData();
+    //         formData.append("name", screenName);
+    //         formData.append("title", screenTitle);
+    //         formData.append("display_mode", displayMode);
 
-            console.log("Flattened assignments for screen:", flattenedAssignments);
+    //         if (cardImage) {
+    //           formData.append("card_image", cardImage);
+    //         }
 
-            // Find assignment by content_id
-            const assignment = flattenedAssignments.find(a => a.content_id === contentId && a.screen_id == screenId);
+    //         const res = await fetch(`${Api}/api/v1/screens`, {
+    //         method: "POST",
+    //         headers: {
+    //             Authorization: `Bearer ${token}`,
+    //         },
+    //         body: formData,
+    //         });
 
-            console.log("Found assignment:", assignment);
-            if (!assignment) return;
+    //         if (!res.ok) throw new Error(`Screen creation failed: ${res.status}`);
 
-            const res = await fetch(`${Api}/api/v1/assignments/${assignment.assignment_id}`, {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` },
-            });
+    //         alert("✅ Screen created successfully!");
 
-            if (!res.ok) throw new Error("Failed to unassign");
+    //         setScreenName("");
+    //         setScreenTitle("");
+    //         setCardImage(null);
 
-            alert("✅ Unassigned!");
-            fetchAssignments(); // refresh assignments state
-        } catch (err) {
-            console.error(err);
-        }
-    }
+    //         fetchScreens();
+    //     } catch (err) {
+    //         console.error("❌ Error creating screen:", err);
+    //     }
+    // }
 
-    // create screen
     async function createScreen(e) {
         e.preventDefault();
+
+        let validationErrors = {};
+
+        // Name validation
+        if (!screenName.trim()) {
+            validationErrors.screenName = "Screen name is required";
+        }
+
+        // Title validation
+        if (!screenTitle.trim()) {
+            validationErrors.screenTitle = "Screen title is required";
+        }
+
+        // Display mode validation
+        if (!displayMode) {
+            validationErrors.displayMode = "Please select a display mode";
+        }
+
+        // File validation
+        if (!cardImage) {
+            validationErrors.cardImage = "Card image is required";
+        } else if (cardImage.size > 100 * 1024 * 1024) {
+            // 100 MB
+            validationErrors.cardImage = "File size must be under 100 MB";
+        }
+
+        // If errors → show and stop submit
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        // If no errors clear old errors
+        setErrors({});
+
         try {
+            const formData = new FormData();
+            formData.append("name", screenName);
+            formData.append("title", screenTitle);
+            formData.append("display_mode", displayMode);
+            formData.append("card_image", cardImage);
+
             const res = await fetch(`${Api}/api/v1/screens`, {
             method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ name: screenName }),
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
             });
 
-            if (!res.ok) throw new Error(`Screen creation failed: ${res.status}`);
-            setScreenName("");
-            fetchScreens(); // refresh list
+            if (!res.ok) throw new Error(`Screen creation failed`);
+
             alert("✅ Screen created successfully!");
+
+            setScreenName("");
+            setScreenTitle("");
+            setCardImage(null);
+
+            fetchScreens();
         } catch (err) {
-            console.error("❌ Error creating screen:", err);
+            console.error(err);
         }
     }
 
@@ -358,13 +267,6 @@ function Screens() {
     //     fetchScreens();
     // }
 
-    async function deleteContent(contentId) {
-        if(!window.confirm("Are you sure to delete content?")) return;
-        await fetch(`${Api}/api/v1/contents/${contentId}`, { method: "DELETE", headers: {"Authorization": `Bearer ${token}`} });
-        fetchContents();
-        fetchAssignments();
-    }
-
     async function deleteScreen(screenId) {
         if(!window.confirm("Are you sure you want to delete this screen? (Note: please remove the screen from the container if it is assigned.)")) return;
         await fetch(`${Api}/api/v1/screens/${screenId}`, { 
@@ -410,118 +312,204 @@ function Screens() {
     setContainers(data);
     }
 
-    async function createContainer(e) {
-    e.preventDefault();
-    await fetch(`${Api}/api/v1/screen_containers`, {
-        method: "POST",
-        headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: containerName }),
-    });
-    setContainerName("");
-    fetchContainers();
-    }
-
-    async function assignScreenToContainer(containerId, screenId) {
-    await fetch(`${Api}/api/v1/screen_containers/${containerId}/assign_screen`, {
-        method: "POST",
-        headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ screen_id: screenId }),
-    });
-    fetchContainers();
-    }
-
-    async function unassignScreenFromContainer(containerId, screenId) {
-    await fetch(`${Api}/api/v1/screen_containers/${containerId}/unassign_screen?screen_id=${screenId}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` },
-    });
-    fetchContainers();
-    }
-
-
-
-
   return (
-    <div className="bg-white shadow-md rounded-2xl p-6">
+    <div className=" p-6">
       {/* <h3 className="text-2xl font-semibold mb-4 text-gray-700">📺 Screens</h3> */}
 
-        <section >
-                <h3 className="text-2xl font-semibold mb-4 text-gray-700">Create New Screen</h3>
-                <form onSubmit={createScreen} className="flex gap-3">
-                    <input
-                    value={screenName}
-                    onChange={(e) => setScreenName(e.target.value)}
-                    placeholder="Enter screen name"
-                    className="border rounded-lg px-4 py-2 flex-1"
-                    />
-                    <button
-                    type="submit"
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
-                    >
-                    Create
-                    </button>
-                </form>
+
+        <section className=" shadow-2xl bg-white rounded-2xl p-6 mb-10">
+        <h3 className="text-2xl font-semibold mb-4 text-gray-700">
+            Create New Screen
+        </h3>
+
+        <form onSubmit={createScreen} className="space-y-5">
+
+            {/* Screen Name */}
+            <div>
+            <label className="block font-medium mb-1">Screen Name</label>
+            <input
+                value={screenName}
+                onChange={(e) => setScreenName(e.target.value)}
+                placeholder="Enter screen name"
+                className="border rounded-lg px-4 py-2 w-full"
+            />
+            {errors.screenName && (
+                <p className="text-red-500 text-sm mt-1">{errors.screenName}</p>
+            )}
+            </div>
+
+            {/* Screen Title */}
+            <div>
+            <label className="block font-medium mb-1">Screen Title</label>
+            <input
+                value={screenTitle}
+                onChange={(e) => setScreenTitle(e.target.value)}
+                placeholder="Enter screen title"
+                className="border rounded-lg px-4 py-2 w-full"
+            />
+            {errors.screenTitle && (
+                <p className="text-red-500 text-sm mt-1">{errors.screenTitle}</p>
+            )}
+            </div>
+
+            {/* Display Mode */}
+            <div>
+            <label className="block font-medium mb-1">Display Mode</label>
+            <select
+                value={displayMode}
+                onChange={(e) => setDisplayMode(e.target.value)}
+                className="border rounded-lg px-4 py-2 w-full"
+            >
+                <option value="">Select Mode</option>
+                <option value="normal-view">Normal View</option>
+                <option value="thumbnail-gallery">Thumbnail Gallery</option>
+                <option value="slide-view">Slide View</option>
+            </select>
+            {errors.displayMode && (
+                <p className="text-red-500 text-sm mt-1">{errors.displayMode}</p>
+            )}
+            </div>
+
+            {/* Card Image Upload */}
+            <div>
+            <label className="block font-medium mb-1">Card Image</label>
+            <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setCardImage(e.target.files[0])}
+                className="block w-full border border-dashed border-gray-400 rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-100"
+            />
+
+            {errors.cardImage && (
+                <p className="text-red-500 text-sm mt-1">{errors.cardImage}</p>
+            )}
+
+            {/* Preview */}
+            <div className="mt-2">
+                {cardImage && (
+                <img
+                    src={URL.createObjectURL(cardImage)}
+                    alt="card-preview"
+                    className="w-32 h-24 object-cover rounded-lg border shadow"
+                />
+                )}
+            </div>
+            </div>
+
+            {/* Submit */}
+            <button
+            type="submit"
+            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+            >
+            Create Screen
+            </button>
+        </form>
         </section>
 
-        <section className="mt-10">
+        <section className=" shadow-2xl bg-white rounded-2xl p-6 mb-10">
             <h3 className="text-2xl font-semibold mb-4 text-gray-700">Availabe Screens</h3>
+
             {screens.length === 0 ? (
                 <p className="text-gray-500">No screens available.</p>
             ) : (
+                <>
                 <ul className="space-y-2">
-                {screens.map((s) => (
+                    {currentScreens.map((s) => (
                     <li key={s.id} className="border-b pb-2 mb-2 flex justify-between items-center">
                         <div>
-                            <div className="flex gap-4 items-center">
-                                <span className="font-medium">{s.name}</span>
-                                <a
-                                href={`/screen/${s.id}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-600 hover:underline"
-                                >
-                                Open
-                                </a>
-                            </div>
-                            <div className="mt-2 text-sm text-gray-600">
-                                Assigned Content: 
-                                {assignments[s.id]?.length ? (
-                                    assignments[s.id].map(c => <span key={c.id} className="ml-2 px-2 py-1 bg-blue-100 rounded">{c.title}</span>)
-                                ) : (
-                                    <span className="ml-2">None</span>
-                                )}
-                            </div>
+                        <div className="flex gap-4 items-center">
+                            <span className="font-medium">{s.name}</span>
+                            <a
+                            href={`/screen/${s.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 hover:underline"
+                            >
+                            Open
+                            </a>
                         </div>
+
+                        <div className="mt-2 text-sm text-gray-600">
+                            Assigned Content:
+                            {assignments[s.id]?.length ? (
+                            assignments[s.id].map(c => (
+                                <span key={c.id} className="ml-2 px-2 py-1 bg-blue-100 rounded">
+                                {c.title}
+                                </span>
+                            ))
+                            ) : (
+                            <span className="ml-2">None</span>
+                            )}
+                        </div>
+
+                        <span className="text-sm italic text-red-500">
+                            {s.display_mode || "normal-view"}
+                        </span>
+                        </div>
+
                         <div className="flex gap-2">
-                            {/* Delete Button */}
-                            <button
+                        <button
                             onClick={() => deleteScreen(s.id)}
                             className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200"
-                            >
+                        >
                             Delete
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setSelectedScreen(s);
-                                    setShowPopup(true);
-                                }}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                                >
-                                Upload Background
-                            </button>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                            setSelectedScreen(s);
+                            setShowPopup(true);
+                            }}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        >
+                            Upload Background
+                        </button>
                         </div>
-                        
                     </li>
-                ))}
+                    ))}
                 </ul>
+
+                {/* Pagination */}
+                <div className="flex justify-center items-center gap-3 mt-5">
+                    <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    className={`px-4 py-2 rounded-lg shadow 
+                        ${currentPage === 1 ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"}
+                    `}
+                    >
+                    Prev
+                    </button>
+
+                    <div className="flex gap-2">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                        <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1 rounded-md border 
+                            ${currentPage === pageNum ? "bg-blue-600 text-white" : "bg-white text-gray-700"}
+                        `}
+                        >
+                        {pageNum}
+                        </button>
+                    ))}
+                    </div>
+
+                    <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    className={`px-4 py-2 rounded-lg shadow 
+                        ${currentPage === totalPages ? "bg-gray-300 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"}
+                    `}
+                    >
+                    Next
+                    </button>
+                </div>
+                
+                </>
             )}
         </section>
+
 
         {/* ✅ Popup Modal */}
         {showPopup && (

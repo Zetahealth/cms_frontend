@@ -447,6 +447,27 @@ function Contents() {
   const [editHyperlink, setEditHyperlink] = useState("");
   const [editTransition, setEditTransition] = useState("fade");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
+    // Pagination Logic
+  const totalPages = Math.ceil(contents.length / itemsPerPage);
+
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+
+  const currentContents = contents.slice(indexOfFirst, indexOfLast);
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage((p) => p + 1);
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage((p) => p - 1);
+  };
+
+
+
+
   useEffect(() => {
     fetchScreens();
     fetchContents();
@@ -598,7 +619,7 @@ function Contents() {
           <p className="text-gray-500">No contents uploaded yet.</p>
         ) : (
           <ul className="space-y-6">
-            {contents.map((c) => (
+            {currentContents.map((c) => (
               <li
                 key={`content-${c.id}`}
                 className="border border-gray-200 p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200"
@@ -669,6 +690,39 @@ function Contents() {
             ))}
           </ul>
         )}
+        {/* Pagination */}
+        {contents.length > 4 && (
+          <div className="flex justify-center items-center gap-4 mt-6">
+            <button
+              onClick={handlePrev}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === 1
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-gray-200 hover:bg-gray-300"
+              }`}
+            >
+              Previous
+            </button>
+
+            <span className="font-semibold">
+              Page {currentPage} / {totalPages}
+            </span>
+
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === totalPages
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-gray-200 hover:bg-gray-300"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        )}
+
       </section>
 
       {/* 🟡 Edit Popup Modal */}

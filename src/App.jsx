@@ -32,6 +32,7 @@ import ScreenView from "./pages/ScreenView";
 import Admin from "./pages/Admin";
 import PrivateRoute from "./pages/PrivateRoute";
 import AdminLayout from "././pages/Admin/AdminLayout"
+import ContainerView from "./pages/ContainerView";
 
 function App() {
   const token = sessionStorage.getItem("authToken");
@@ -89,6 +90,15 @@ function App() {
             <ScreenView/>
           }
         />
+
+        <Route 
+          path="/container/:slug" 
+          element={
+            <ContainerView/>
+          }
+        />
+
+
 
 
         <Route
