@@ -261,6 +261,8 @@ function UploadContent() {
   const [transitionEffect, setTransitionEffect] = useState("fade");
   const [loading, setLoading] = useState(false); // ✅ loader state
   const [errors, setErrors] = useState({});
+  const [logo, setLogo] = useState(null);
+
 
 
   const token = sessionStorage.getItem("authToken");
@@ -320,6 +322,19 @@ function UploadContent() {
     // Content type required
     if (!contentType) validationErrors.contentType = "Content type is required";
 
+    // Optional Logo Validation
+    if (logo && logo.length > 0) {
+      Array.from(logo).forEach((lg) => {
+        if (!lg.type.startsWith("image/")) {
+          validationErrors.logo = "Logo must be an image file";
+        }
+        if (lg.size > 5 * 1024 * 1024) {
+          validationErrors.logo = "Logo must be under 5MB";
+        }
+      });
+    }
+
+
     // File required
     if (!file || file.length === 0) {
       validationErrors.file = "You must upload one file";
@@ -361,6 +376,10 @@ function UploadContent() {
       form.append("hyperlink", hyperlink);
       form.append("transition_effect", transitionEffect);
 
+      if (logo && logo.length > 0) {
+        Array.from(logo).forEach((lg) => form.append("logo", lg));
+      }
+
       Array.from(file).forEach((f) => form.append("files", f));
 
       const res = await fetch(`${Api}/api/v1/contents`, {
@@ -380,6 +399,7 @@ function UploadContent() {
       setPosition("Center");
       setHyperlink("");
       setTransitionEffect("fade");
+      setLogo(null);
     } catch (err) {
       console.error(err);
       alert("❌ Upload failed! Check console.");
@@ -506,6 +526,25 @@ function UploadContent() {
             <option value="slide-up">Slide Up</option>
           </select>
         </div>
+
+
+        {/* Logo Upload (Optional) */}
+        <div>
+          <label className="block font-medium mb-1">
+            Upload Logo (Optional)
+          </label>
+          
+          <input
+            type="file"
+            onChange={(e) => setLogo(e.target.files)}
+            className="w-full border border-dashed px-4 py-3 rounded-lg"
+          />
+
+          {errors.logo && (
+            <p className="text-red-500 text-sm">{errors.logo}</p>
+          )}
+        </div>
+
 
         {/* File Upload */}
         <div>

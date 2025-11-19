@@ -19,6 +19,10 @@ function ScreenContainers() {
   const itemsPerPage = 5;
 
 
+  const [editPopup, setEditPopup] = useState(false);
+
+
+
 
   const token = sessionStorage.getItem("authToken");
 
@@ -272,6 +276,64 @@ function ScreenContainers() {
     setCurrentPage((p) => (p > 1 ? p - 1 : p));
 
 
+  // const [editPopup, setEditPopup] = useState(false);
+  const [editingContainer, setEditingContainer] = useState(null);
+
+  const [editName, setEditName] = useState("");
+  const [editType, setEditType] = useState("image");
+
+  const [editCardImage, setEditCardImage] = useState(null);
+  const [editBackground, setEditBackground] = useState(null);
+
+  const [existingCardImage, setExistingCardImage] = useState(null);
+  const [existingBackground, setExistingBackground] = useState(null);
+
+  function openEdit(c) {
+    setEditingContainer(c);
+    setEditName(c.name);
+    setEditType(c.content_type);
+
+    // existing images
+    setExistingCardImage(c.files?.[0] || null);
+    setExistingBackground(c.background_url || null);
+
+    setEditPopup(true);
+  }
+
+  async function updateContainer(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append("name", editName);
+    formData.append("content_type", editType);
+
+    // only add new card image
+    if (editCardImage) {
+      formData.append("files", editCardImage);
+    }
+
+    // only add new background file
+    if (editBackground) {
+      formData.append("background", editBackground);
+    }
+
+    const res = await fetch(`${Api}/api/v1/screen_containers/${editingContainer.id}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      alert("Update failed!");
+      return;
+    }
+
+    alert("Updated Successfully!");
+
+    setEditPopup(false);
+    fetchContainers();
+  }
+
 
 
 
@@ -404,6 +466,15 @@ function ScreenContainers() {
                   >
                     Delete
                   </button>
+
+                  <button
+                    onClick={() => openEdit(container)}
+                    className="text-yellow-600 hover:text-yellow-900 font-medium"
+                  >
+                    Edit
+                  </button>
+
+
                 </div>
 
               </div>
@@ -466,6 +537,121 @@ function ScreenContainers() {
             </button>
           </div>
         </section>
+
+        {editPopup && editingContainer && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 shadow-lg w-[450px] relative">
+              <h3 className="text-xl font-bold mb-4">
+                Edit Container: {editingContainer.name}
+              </h3>
+
+              <button
+                onClick={() => setEditPopup(false)}
+                className="absolute top-3 right-3 text-gray-600 hover:text-red-500"
+              >
+                ✕
+              </button>
+
+              <form onSubmit={updateContainer} className="space-y-5">
+
+                {/* Name */}
+                <div>
+                  <label className="block font-medium mb-1">Container Name</label>
+                  <input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full border rounded-lg px-4 py-2"
+                  />
+                </div>
+
+                {/* Content Type */}
+                <div>
+                  <label className="block font-medium mb-1">Content Type</label>
+                  <select
+                    value={editType}
+                    onChange={(e) => setEditType(e.target.value)}
+                    className="w-full border rounded-lg px-4 py-2"
+                  >
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                  </select>
+                </div>
+
+                {/* Card Image */}
+                <div>
+                  <label className="block font-medium mb-1">Replace Card Image</label>
+                  <input
+                    type="file"
+                    accept="image/*,video/*, gif/*"
+                    onChange={(e) => setEditCardImage(e.target.files[0])}
+                    className="w-full border border-dashed px-4 py-3 rounded-lg"
+                  />
+
+                  {/* existing card image */}
+                  {existingCardImage && !editCardImage && (
+                    <div className="mt-2 relative">
+                      <img
+                        src={existingCardImage}
+                        className="w-32 h-24 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setExistingCardImage(null)}
+                        className="absolute -top-2 -right-2 bg-white rounded-full px-2 shadow text-black"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
+                  {/* new preview */}
+                  {editCardImage && (
+                    <div className="mt-2">
+                      <img
+                        src={URL.createObjectURL(editCardImage)}
+                        className="w-32 h-24 object-cover rounded-lg border"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Background */}
+                <div>
+                  <label className="block font-medium mb-1">Replace Background</label>
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => setEditBackground(e.target.files[0])}
+                    className="w-full border border-dashed px-4 py-3 rounded-lg"
+                  />
+
+                  {existingBackground && !editBackground && (
+                    <div className="mt-2">
+                      <img
+                        src={existingBackground}
+                        className="w-40 h-28 object-cover rounded-lg border"
+                      />
+                    </div>
+                  )}
+
+                  {editBackground && (
+                    <div className="mt-2">
+                      <img
+                        src={URL.createObjectURL(editBackground)}
+                        className="w-40 h-28 object-cover rounded-lg border"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <button className="bg-blue-600 text-white px-6 py-2 rounded-lg w-full">
+                  Update Container
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
 
 
       </div>

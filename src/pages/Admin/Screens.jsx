@@ -16,6 +16,16 @@ function Screens() {
 
 
   const [showPopup, setShowPopup] = useState(false);
+  
+  const [editPopup, setEditPopup] = useState(false);
+  const [editScreen, setEditScreen] = useState(null);
+
+  const [editName, setEditName] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editMode, setEditMode] = useState("normal-view");
+  const [editCardImage, setEditCardImage] = useState(null);
+
+
   const [selectedScreen, setSelectedScreen] = useState(null);
   const [backgroundFile, setBackgroundFile] = useState(null);
 
@@ -93,6 +103,52 @@ function Screens() {
         console.error(err);
     }
     }
+
+    async function updateScreen(e) {
+        e.preventDefault();
+
+        let validation = {};
+
+        if (!editName.trim()) validation.name = "Screen name is required";
+        if (!editTitle.trim()) validation.title = "Screen title is required";
+        if (!editMode) validation.mode = "Select a display mode";
+
+        if (editCardImage && editCardImage.size > 100 * 1024 * 1024) {
+            validation.cardImage = "Image must be under 100MB";
+        }
+
+        if (Object.keys(validation).length > 0) {
+            setErrors(validation);
+            return;
+        }
+
+        try {
+            const form = new FormData();
+            form.append("name", editName);
+            form.append("title", editTitle);
+            form.append("display_mode", editMode);
+
+            if (editCardImage) {
+            form.append("card_image", editCardImage);
+            }
+
+            const res = await fetch(`${Api}/api/v1/screens/${editScreen.id}`, {
+            method: "PUT",
+            headers: { Authorization: `Bearer ${token}` },
+            body: form,
+            });
+
+            if (!res.ok) throw new Error("Update failed");
+
+            alert("✅ Screen updated!");
+            setEditPopup(false);
+            fetchScreens();
+        } catch (err) {
+            console.error(err);
+            alert("❌ Could not update screen");
+        }
+    }
+
 
 
 
@@ -364,6 +420,8 @@ function Screens() {
                 <option value="normal-view">Normal View</option>
                 <option value="thumbnail-gallery">Thumbnail Gallery</option>
                 <option value="slide-view">Slide View</option>
+                <option value="diagonal-split-view">Diagonal Split View</option>
+                <option value="card-carousel">Card Carousel</option>
             </select>
             {errors.displayMode && (
                 <p className="text-red-500 text-sm mt-1">{errors.displayMode}</p>
@@ -454,6 +512,20 @@ function Screens() {
                         >
                             Delete
                         </button>
+                        <button
+                        onClick={() => {
+                            setEditScreen(s);
+                            setEditName(s.name);
+                            setEditTitle(s.title);
+                            setEditMode(s.display_mode);
+                            setEditPopup(true);
+                        }}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg transition duration-200"
+                        >
+                        Edit
+                        </button>
+
+
 
                         <button
                             onClick={() => {
@@ -509,6 +581,106 @@ function Screens() {
                 </>
             )}
         </section>
+
+
+        
+        {editPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 shadow-lg w-96 relative">
+            <h3 className="text-xl font-bold mb-4">
+                Edit Screen: {editScreen?.name}
+            </h3>
+
+            <form onSubmit={updateScreen} className="space-y-5">
+                
+                {/* Edit Name */}
+                <div>
+                <label className="block font-medium mb-1">Screen Name</label>
+                <input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="border rounded-lg px-4 py-2 w-full"
+                />
+                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                </div>
+
+                {/* Edit Title */}
+                <div>
+                <label className="block font-medium mb-1">Screen Title</label>
+                <input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="border rounded-lg px-4 py-2 w-full"
+                />
+                {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+                </div>
+
+                {/* Display Mode */}
+                <div>
+                <label className="block font-medium mb-1">Display Mode</label>
+                <select
+                    value={editMode}
+                    onChange={(e) => setEditMode(e.target.value)}
+                    className="border rounded-lg px-4 py-2 w-full"
+                >
+                    <option value="normal-view">Normal View</option>
+                    <option value="thumbnail-gallery">Thumbnail Gallery</option>
+                    <option value="slide-view">Slide View</option>
+                    <option value="diagonal-split-view">Diagonal Split View</option>
+                    <option value="card-carousel">Card Carousel</option>
+
+                </select>
+                {errors.mode && (
+                    <p className="text-red-500 text-sm">{errors.mode}</p>
+                )}
+                </div>
+
+                {/* Edit Card Image */}
+                <div>
+                <label className="block font-medium mb-1">Card Image</label>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setEditCardImage(e.target.files[0])}
+                    className="block w-full border border-dashed border-gray-400 rounded-lg px-4 py-3"
+                />
+
+                {errors.cardImage && (
+                    <p className="text-red-500 text-sm">{errors.cardImage}</p>
+                )}
+
+                <div className="mt-2">
+                    {editCardImage ? (
+                    <img
+                        src={URL.createObjectURL(editCardImage)}
+                        className="w-32 h-24 rounded-lg border object-cover"
+                    />
+                    ) : editScreen?.card_image_url ? (
+                    <img
+                        src={editScreen.card_image_url}
+                        className="w-32 h-24 rounded-lg border object-cover"
+                    />
+                    ) : null}
+                </div>
+                </div>
+
+                <button
+                type="submit"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                >
+                Update Screen
+                </button>
+            </form>
+
+            <button
+                onClick={() => setEditPopup(false)}
+                className="absolute top-3 right-3 text-gray-600 hover:text-red-500"
+            >
+                ✕
+            </button>
+            </div>
+        </div>
+        )}
 
 
         {/* ✅ Popup Modal */}

@@ -23,6 +23,19 @@
   color: #535bf2;
 } */
 
+
+/* Hide scrollbar but allow scrolling */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE */
+  scrollbar-width: none; /* Firefox */
+}
+
+
+
 body {
   /* margin: 5px; */
   /* padding: 10px; */

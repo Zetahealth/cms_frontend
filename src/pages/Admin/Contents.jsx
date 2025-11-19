@@ -446,6 +446,7 @@ function Contents() {
   const [editPosition, setEditPosition] = useState("Center");
   const [editHyperlink, setEditHyperlink] = useState("");
   const [editTransition, setEditTransition] = useState("fade");
+  const [logo, setLogo] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
@@ -594,6 +595,10 @@ function Contents() {
       form.append("position", editPosition);
       form.append("hyperlink", editHyperlink);
       form.append("transition_effect", editTransition);
+
+      if (logo && logo.length > 0) {
+        Array.from(logo).forEach((lg) => form.append("logo", lg));
+      }
 
       const res = await fetch(`${Api}/api/v1/contents/${selectedContent.id}`, {
         method: "PUT",
@@ -781,6 +786,18 @@ function Contents() {
                   value={editHyperlink}
                   onChange={(e) => setEditHyperlink(e.target.value)}
                   className="w-full border rounded-lg px-3 py-2"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium mb-1">
+                  Upload Logo
+                </label>
+                
+                <input
+                  type="file"
+                  onChange={(e) => setLogo(e.target.files)}
+                  className="w-full border border-dashed px-4 py-3 rounded-lg"
                 />
               </div>
 
