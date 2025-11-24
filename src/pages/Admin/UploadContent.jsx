@@ -248,8 +248,9 @@
 // }
 
 // export default UploadContent;
-import React, { useState } from "react";
+import React, { useState , useEffect} from "react";
 import Api from "../../Api/Api";
+import SubContentForm from "./SubContentForm"
 
 function UploadContent() {
   const [title, setTitle] = useState("");
@@ -267,48 +268,31 @@ function UploadContent() {
 
   const token = sessionStorage.getItem("authToken");
 
-  // async function upload(e) {
-  //   e.preventDefault();
-  //   setLoading(true); // show loader
 
-  //   try {
-  //     const form = new FormData();
-  //     form.append("title", title);
-  //     form.append("content", content);
-  //     form.append("content_type", contentType);
-  //     form.append("position", position);
-  //     form.append("hyperlink", hyperlink);
-  //     form.append("transition_effect", transitionEffect);
 
-  //     // ✅ FIXED: append files correctly (no duplication)
-  //     if (file && file.length > 0) {
-  //       Array.from(file).forEach((f) => form.append("files", f)); // no []
-  //     }
+  const [allContents, setAllContents] = useState([]);
+  const [selectedContentId, setSelectedContentId] = useState(null);
+  const [subContents, setSubContents] = useState([]);
+  const [editingSubContent, setEditingSubContent] = useState(null);
 
-  //     const res = await fetch(`${Api}/api/v1/contents`, {
-  //       method: "POST",
-  //       headers: { Authorization: `Bearer ${token}` },
-  //       body: form,
-  //     });
+  // Load all contents
+  useEffect(() => {
+    fetch(`${Api}/api/v1/contents`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(setAllContents);
+  }, []);
 
-  //     if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+  // Load sub-contents for selected content
+  useEffect(() => {
+    if (!selectedContentId) return;
 
-  //     alert("✅ Content uploaded successfully!");
+    fetch(`${Api}/api/v1/sub_contents?content_id=${selectedContentId}`)
+      .then(res => res.json())
+      .then(setSubContents);
+  }, [selectedContentId]);
 
-  //     // Reset form
-  //     setTitle("");
-  //     setContent("");
-  //     setFile(null);
-  //     setPosition("Center");
-  //     setHyperlink("");
-  //     setTransitionEffect("fade");
-  //   } catch (err) {
-  //     console.error(err);
-  //     alert("❌ Failed to upload content. Check console for details.");
-  //   } finally {
-  //     setLoading(false); // hide loader
-  //   }
-  // }
 
   async function upload(e) {
     e.preventDefault();
@@ -408,8 +392,21 @@ function UploadContent() {
     }
   }
 
+  async function deleteSubContent(id) {
+    if (!window.confirm("Delete this sub-content?")) return;
+
+    await fetch(`${Api}/api/v1/sub_contents/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    setSubContents((prev) => prev.filter((s) => s.id !== id));
+  }
+
+
 
   return (
+    <>
     <div className="bg-white shadow-md rounded-2xl p-6 relative">
       {/* Loader Overlay */}
       {loading && (
@@ -571,6 +568,78 @@ function UploadContent() {
 
       
     </div>
+    {/* SELECT CONTENT DROPDOWN */}
+    <div className="bg-white shadow-md rounded-2xl p-6 mt-10">
+      <h3 className="text-xl font-semibold mb-3">Select Content to Manage Sub-Contents</h3>
+
+      <select
+        className="border px-4 py-2 rounded w-full"
+        value={selectedContentId || ""}
+        onChange={(e) => setSelectedContentId(e.target.value)}
+      >
+        <option value="">-- Select Content --</option>
+        {allContents.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.title}
+          </option>
+        ))}
+      </select>
+    </div>
+    {selectedContentId && (
+      <div className="bg-white shadow-md rounded-2xl p-6 mt-6">
+        <h3 className="text-xl font-semibold mb-3">Sub-Contents</h3>
+
+        {subContents.length === 0 ? (
+          <p className="text-gray-500">No sub-contents yet.</p>
+        ) : (
+          <ul className="space-y-4">
+            {subContents.map((sub) => (
+              <li
+                key={sub.id}
+                className="p-4 border rounded-lg flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-bold">{sub.title}</p>
+                  <p className="text-gray-600 text-sm">{sub.description?.slice(0, 50)}...</p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    className="bg-yellow-500 text-white px-4 py-1 rounded"
+                    onClick={() => setEditingSubContent(sub)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    className="bg-red-500 text-white px-4 py-1 rounded"
+                    onClick={() => deleteSubContent(sub.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    )}
+
+    <SubContentForm
+      parentContentId={selectedContentId}
+      editing={editingSubContent}
+      onSaved={() => {
+        setEditingSubContent(null);
+        // reload sub contents
+        fetch(`${Api}/api/v1/sub_contents?content_id=${selectedContentId}`)
+          .then(res => res.json())
+          .then(setSubContents);
+      }}
+    />
+
+
+
+    </>
   );
 }
 

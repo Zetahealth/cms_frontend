@@ -2,10 +2,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Api from "../Api/Api";
 import * as ActionCable from "@rails/actioncable";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, number } from "framer-motion";
 
 
-const cable = ActionCable.createConsumer("ws://backendafp.connectorcore.com/cable");
+// const cable = ActionCable.createConsumer("ws://localhost:3000/cable");
+const cable = ActionCable.createConsumer("wss://backendafp.connectorcore.com/cable");
 
 function ScreenView() {
   const { slug } = useParams();
@@ -26,7 +27,22 @@ function ScreenView() {
 
   const [container, setContainer] = useState(null);
   const [screenName, setScreenName] = useState(null);
+  const [containerLogo , setContainerLogo] = useState(null);
 
+
+
+
+
+
+
+  const trimWords = (text, limit = 50) => {
+    const words = text.split(" ");
+    if (words.length <= limit) return text;
+    return words.slice(0, limit).join(" ") + "...";
+  };
+
+
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
 
 
@@ -46,6 +62,32 @@ function ScreenView() {
     return () => subscription.unsubscribe();
   }, [slug]);
 
+  // async function fetchContents() {
+  //   try {
+  //     const res = await fetch(`${Api}/api/v1/screen_contents/${slug}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+
+  //     const data = await res.json();
+  //     console.log("✅ Fetched contents:-----------------------", data);
+  //     setContents(data.contents || []);
+  //     setBackground(data.background_url);
+  //     setContainer(data.container_ids[0] || null);
+  //     setDisplayMode(data.display_mode || "normal-view");
+  //     if (!mode) {
+  //       setMode(data.display_mode || "diagonal-split-view");
+  //     }
+
+  //     setScreenName(data.screen_name || "");
+
+  //   } catch (err) {
+  //     console.error("❌ Error:", err);
+  //   }
+  // }
+
   async function fetchContents() {
     try {
       const res = await fetch(`${Api}/api/v1/screen_contents/${slug}`, {
@@ -56,18 +98,37 @@ function ScreenView() {
       });
 
       const data = await res.json();
-      console.log("✅ Fetched contents:-----------------------", data);
+      // console.log("---------------data---------------------",data)
       setContents(data.contents || []);
       setBackground(data.background_url);
       setContainer(data.container_ids[0] || null);
-      setDisplayMode(data.display_mode || "normal-view");
-      setMode(data.display_mode || "diagonal-split-view");
       setScreenName(data.screen_name || "");
+      setContainerLogo(data.container_files || null)
+
+      // console.log("aaaaaaaaaaaaaaaaaaaaaaaa-----------",data)
+      setMode(data.display_mode)
+      // 🔥 Backend display mode becomes the initial UI view
+
+      // setMode((prev) => {
+      //   // Don't override presentation-view mid-session
+      //   if (prev === "presentation-view") return prev;
+
+      //   // Use backend value only when screen loads first time
+      //   if (prev === "diagonal-split-view" || prev === "normal-view") {
+      //     return data.display_mode || prev;
+      //   }
+
+      //   // Otherwise keep whatever user is looking at
+      //   return prev;
+      // });
 
     } catch (err) {
       console.error("❌ Error:", err);
     }
   }
+
+
+
 
   const handleNext = () => {
     if (!nextScreenId) {
@@ -156,7 +217,6 @@ function ScreenView() {
     if (words.length <= limit) return text;
     return words.slice(0, limit).join(" ") + "...";
   };
-
 
 
 
@@ -351,125 +411,428 @@ function ScreenView() {
   );
 
 
-  const renderSlideView = () => {
-    const prev = () =>
-      setActiveIndex((prev) =>
-        prev === 0 ? contents.length - 1 : prev - 1
-      );
+  const PresentationView = () => {
+    if (!selected) return null;
 
-    const next = () =>
-      setActiveIndex((prev) =>
-        prev === contents.length - 1 ? 0 : prev + 1
-      );
+    const [logoAnimated, setLogoAnimated] = useState(false);
+    useEffect(() => {
+      setLogoAnimated(true);  // start animating
+    }, []);
 
-    const getPosition = (index) => {
-      if (index === activeIndex) return "center";
-      if (index === activeIndex - 1) return "left";
-      if (index === activeIndex + 1) return "right";
-      return "hidden";
+    // All images (main + gallery)
+    const images = [
+      selected.sub_contents?.[0]?.main_image,
+      ...(selected.sub_contents?.[0]?.gallery_images || [])
+    ];
+
+    // ❗ Start with no image selected
+    const [activeIndex, setActiveIndex] = useState(null);
+
+    const nextImage = () => {
+      if (activeIndex === null) return; // nothing selected yet
+      setActiveIndex((prev) =>
+        prev === images.length - 1 ? 0 : prev + 1
+      );
     };
 
-    const active = contents[activeIndex];
+    const prevImage = () => {
+      if (activeIndex === null) return;
+      setActiveIndex((prev) =>
+        prev === 0 ? images.length - 1 : prev - 1
+      );
+    };
+
+    // Background always uses the first/main image
+    const backgroundImage = selected.sub_contents?.[0].main_image;
 
     return (
       <div
-        className="relative flex flex-col items-center justify-center h-screen overflow-hidden"
+        className={`relative w-full h-screen text-white flex items-center justify-center
+          ${activeIndex !== null ? "backdrop-blur-sm brightness-70" : ""}
+        `}
         style={{
-          backgroundImage: `url(${background})`,
+          backgroundImage: `url(${backgroundImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        {/* --- MAIN SLIDER AREA --- */}
-        <div className="relative w-full h-[70%] flex items-center justify-center">
-          {contents.map((c, index) => {
-            const pos = getPosition(index);
 
-            // 🔥 Improved container sizing + animation
-            let style = {
-              position: "absolute",
-              width: "50%",
-              height: "70%",
-              borderRadius: "18px",
-              overflow: "hidden",
-              background: "rgba(0,0,0,0.3)",
-              transition: "all 0.7s ease",
-              transform: "scale(0.7)",
-              opacity: 0.4,
-              zIndex: 10,
-              cursor: "pointer",
-              boxShadow: "0px 0px 40px rgba(0,0,0,0.5)",
-            };
-
-            if (pos === "center") {
-              style.transform = "scale(1)";
-              style.opacity = 1;
-              style.zIndex = 40;
-            } else if (pos === "left") {
-              style.transform = "translateX(-320px) scale(0.85)";
-              style.opacity = 0.6;
-              style.zIndex = 20;
-            } else if (pos === "right") {
-              style.transform = "translateX(320px) scale(0.85)";
-              style.opacity = 0.6;
-              style.zIndex = 20;
-            }
-
-            const handleClick = () => {
-              if (pos === "left") prev();
-              if (pos === "right") next();
-            };
-
-            return (
-              <motion.div key={index} style={style} onClick={handleClick}>
-                {c.files?.[0] ? (
-                  <img
-                    src={c.files[0]}
-                    className="w-full h-full object-contain bg-black/15"
-                    style={{ imageRendering: "high-quality" }}
-                    alt=""
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full bg-black/50 text-white">
-                    No Image
-                  </div>
-                )}
-
-                {/* Overlay Title */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
-                  <h2 className="text-3xl font-bold text-white drop-shadow-lg px-6 py-2 rounded-lg">
-                    {c.title}
-                  </h2>
-                </div>
-              </motion.div>
-            );
-          })}
+        <div
+          className="absolute top-4 left-6 cursor-pointer z-[9999]"
+          style={{ perspective: "1200px" }}
+          onClick={() => setMode("slide-view")}
+        >
+          <img
+            src={containerLogo}
+            alt="logo"
+            className={`h-48 w-auto object-contain z-[9999] ${
+              logoAnimated ? "logo-animate-sliderInner" : "block-hidden"
+            }`}
+          />
         </div>
 
-        {/* === QR CODE — FIXED & BEAUTIFUL === */}
-        
 
-        {/* --- Description Section --- */}
-        <div className="w-full text-center px-10 py-6 text-white text-2xl leading-relaxed bg-black/10 ">
-          {active?.content || "No description available"}
 
-          {active?.qr_code_url && (
-            <div className="flex flex-col items-end z-50">
-              <img
-                src={active.qr_code_url}
-                className="w-40 h-40 bg-white p-2 rounded-xl shadow-2xl"
-                alt="QR Code"
-              />
-              <span className="mt-2 text-white font-semibold text-sm">
-                Learn More
-              </span>
-            </div>
-          )}
+        {/* OVERLAY */}
+        <div className="absolute inset-0 pointer-events-none"></div>
 
+
+        {/* MAIN TEXT CONTENT */}
+        <div className="relative flex flex-col items-center z-20">
+          <h1 className="text-5xl font-bold mb-8  text-center">
+            {selected.title}
+          </h1>
+
+          <p className="w-[70%] text-2xl leading-relaxed text-center bg-black/30 p-3 rounded-2xl">
+            {selected.sub_contents?.[0].description}
+          </p>
         </div>
+
+        {/* === CENTER LARGE IMAGE (ONLY WHEN CLICKED) === */}
+        {activeIndex !== null && (
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
+                      rounded-xl shadow-2xl z-30 bg-black/70"
+          >
+            <img
+              src={images[activeIndex]}
+              className="w-[55vw] h-[65vh] object-cover rounded-xl"
+            />
+          </div>
+        )}
+        {activeIndex !== null && (
+          <div
+            onClick={() => setActiveIndex(null)}
+            className="absolute l top-5 text-6xl cursor-pointer  hover:opacity-100 z-40"
+          >
+            <div className="text-white text-5xl font-bold drop-shadow">Back</div>
+          </div>
+        )}
+
+
+
+        {/* LEFT ARROW */}
+        {activeIndex !== null && (
+          <div
+            onClick={prevImage}
+            className="absolute left-20 top-1/2 -translate-y-1/2 text-6xl cursor-pointer opacity-70 hover:opacity-100 z-40"
+          >
+            ❮
+          </div>
+        )}
+
+        {/* RIGHT ARROW */}
+        {activeIndex !== null && (
+          <div
+            onClick={nextImage}
+            className="absolute right-20 top-1/2 -translate-y-1/2 text-6xl cursor-pointer opacity-70 hover:opacity-100 z-40"
+          >
+            ❯
+          </div>
+        )}
+
+        {/* QR CODE */}
+        {selected.qr_code_url && (
+          <div className="absolute top-24 right-20 flex flex-col items-center z-40">
+            <img
+              src={selected.qr_code_url}
+              className="w-40 h-40 bg-white p-2 rounded-xl shadow-xl"
+            />
+            <span className="mt-2 text-white font-semibold">Learn More</span>
+          </div>
+        )}
+
+          <div
+            className="
+              absolute bottom-10 left-0 w-full 
+              overflow-x-auto overflow-y-hidden 
+              whitespace-nowrap 
+              px-6 py-2 
+              hide-scrollbar 
+              z-40
+            "
+          >
+            {images.map((img, i) => (
+              <div key={i} className="inline-block mr-6">
+                <img
+                  src={img}
+                  onClick={() => setActiveIndex(i)}
+                  className={`
+                    w-40 h-28 object-cover rounded-lg shadow-xl cursor-pointer 
+                    transition-all duration-300
+                    ${activeIndex === i ? "opacity-100 scale-110 border-4 border-white" : "opacity-60 hover:opacity-100"}
+                  `}
+                />
+              </div>
+            ))}
+          </div>
+
+
+
+
+        {/* BACK BUTTON */}
+        {/* <div
+          onClick={() => setMode("slide-view")}
+          className="absolute top-10 left-10 cursor-pointer z-50"
+        >
+          <div className="text-white text-5xl font-bold drop-shadow">←</div>
+        </div> */}
       </div>
     );
   };
+
+
+  // const renderSlideView = () => {
+  //   const prev = () =>
+  //     setActiveIndex((prev) => (prev === 0 ? contents.length - 1 : prev - 1));
+
+  //   const next = () =>
+  //     setActiveIndex((prev) => (prev === contents.length - 1 ? 0 : prev + 1));
+
+  //   const getPosition = (index) => {
+  //     if (index === activeIndex) return "center";
+  //     if (index === activeIndex - 1) return "left";
+  //     if (index === activeIndex + 1) return "right";
+  //     return "hidden";
+  //   };
+
+  //   const active = contents[activeIndex];
+
+  //   return (
+  //     <div
+  //       className="relative flex flex-col items-center justify-center h-screen overflow-hidden"
+  //       style={{
+  //         backgroundImage: `url(${background})`,
+  //         backgroundSize: "cover",
+  //         backgroundPosition: "center",
+  //       }}
+  //     >
+  //       <div
+  //           className="absolute top-4  cursor-pointer"
+  //           onClick={() => {
+  //             navigate(`/container/${container}`);
+  //             // setShowContentContainer(false);
+  //           }}
+  //         >
+  //           <img
+  //             src={containerLogo}
+  //             alt="logo"
+  //             className="h-48 w-auto object-contain"
+  //           />
+  //       </div>
+
+
+  //       {/* === MAIN SLIDER AREA (TOP LIKE IMAGE) === */}
+  //       <div className="relative w-full h-[65%] flex items-center justify-center">
+  //         {contents.map((c, index) => {
+  //           const pos = getPosition(index);
+
+  //           let style = {
+  //             position: "absolute",
+  //             width: "48%",
+  //             height: "70%",
+  //             borderRadius: "10px",
+  //             overflow: "hidden",
+  //             transition: "all 0.7s ease",
+  //             opacity: 0.4,
+  //             zIndex: 10,
+  //             filter: "grayscale(40%)",
+  //           };
+
+  //           if (pos === "center") {
+  //             style.transform = "scale(1)";
+  //             style.opacity = 1;
+  //             style.zIndex = 40;
+  //             style.filter = "grayscale(0%)";
+  //           } else if (pos === "left") {
+  //             style.transform = "translateX(-420px) scale(0.8)";
+  //             style.opacity = 0.5;
+  //             style.zIndex = 20;
+  //           } else if (pos === "right") {
+  //             style.transform = "translateX(420px) scale(0.8)";
+  //             style.opacity = 0.5;
+  //             style.zIndex = 20;
+  //           }
+
+  //           const handleClick = () => {
+  //             if (pos === "left") prev();
+  //             else if (pos === "right") next();
+  //             else if (pos === "center") {
+  //               console.log("(====================)",c)
+  //               setSelected(c);    // Load clicked slide content
+  //               if(c.has_subcontent){
+  //                 setMode("presentation-view");  // Switch to PresentationView
+  //               }
+  //             }
+  //           };
+
+
+  //           return (
+  //             <motion.div key={index} style={style} onClick={handleClick}>
+  //               {c.files?.[0] ? (
+  //                 <img
+  //                   src={c.files[0]}
+  //                   className="w-full h-full object-cover"
+  //                 />
+  //               ) : (
+  //                 <div className="flex items-center justify-center w-full h-full bg-black/50 text-white">
+  //                   No Image
+  //                 </div>
+  //               )}
+
+  //               {/* === TITLE OVERLAY LIKE VIDEO === */}
+  //               {pos === "center" && (
+  //                 <div className="absolute bottom-4 w-full text-center">
+  //                   <h2 className="text-4xl font-bold text-white drop-shadow-xl">
+  //                     {c.title}
+  //                   </h2>
+  //                 </div>
+  //               )}
+  //             </motion.div>
+  //           );
+  //         })}
+  //       </div>
+
+  //       {/* === DESCRIPTION AREA (BOTTOM) === */}
+  //       <div className="absolute bottom-8 w-[80%] text-center text-white text-xl leading-relaxed bg-black/20 p-4 rounded-xl">
+  //         {active?.content}
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+
+  const renderSlideView = () => {
+  const prev = () =>
+    setActiveIndex((prev) => (prev === 0 ? contents.length - 1 : prev - 1));
+
+  const next = () =>
+    setActiveIndex((prev) =>
+      prev === contents.length - 1 ? 0 : prev + 1
+    );
+
+  const getPosition = (index) => {
+    if (index === activeIndex) return "center";
+    if (index === activeIndex - 1) return "left";
+    if (index === activeIndex + 1) return "right";
+    return "hidden";
+  };
+
+  const active = contents[activeIndex];
+
+  return (
+    <div
+      className="relative flex flex-col items-center justify-center h-screen overflow-hidden"
+      style={{
+        backgroundImage: `url(${background})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* LOGO */}
+      <div
+        className="absolute top-4 cursor-pointer z-50"
+        onClick={() => navigate(`/container/${container}`)}
+      >
+        <img
+          src={containerLogo}
+          alt="logo"
+          className="h-20 sm:h-24 md:h-32 lg:h-40 w-auto object-contain"
+        />
+      </div>
+
+      {/* === RESPONSIVE SLIDER === */}
+      <div className="relative w-full h-[60%] sm:h-[65%] md:h-[70%] flex items-center justify-center">
+        {contents.map((c, index) => {
+          const pos = getPosition(index);
+
+          // RESPONSIVE SLIDE BASE STYLE
+          let style = {
+            position: "absolute",
+            width: "80vw",
+            maxWidth: "600px",
+            height: "45vh",
+            maxHeight: "380px",
+            borderRadius: "12px",
+            overflow: "hidden",
+            transition: "all 0.6s ease",
+            opacity: 0.4,
+            zIndex: 10,
+            filter: "grayscale(40%)",
+          };
+
+          // RESPONSIVE OFFSETS
+          const mobileOffset = "42vw";
+          const desktopOffset = "350px";
+
+          // Choose offset depending on screen width
+          const offset = window.innerWidth < 768 ? mobileOffset : desktopOffset;
+
+          if (pos === "center") {
+            style.transform = "scale(1)";
+            style.opacity = 1;
+            style.zIndex = 40;
+            style.filter = "grayscale(0%)";
+          } else if (pos === "left") {
+            style.transform = `translateX(-${offset}) scale(0.85)`;
+            style.opacity = 0.5;
+            style.zIndex = 20;
+          } else if (pos === "right") {
+            style.transform = `translateX(${offset}) scale(0.85)`;
+            style.opacity = 0.5;
+            style.zIndex = 20;
+          }
+
+          const handleClick = () => {
+            if (pos === "left") prev();
+            else if (pos === "right") next();
+            else if (pos === "center") {
+              setSelected(c);
+              if (c.has_subcontent) setMode("presentation-view");
+            }
+          };
+
+          return (
+            <motion.div key={index} style={style} onClick={handleClick}>
+              {/* IMAGE FULLY VISIBLE – NO CROP */}
+              {c.files?.[0] ? (
+                <img
+                  src={c.files[0]}
+                  className="w-full h-full object-contain bg-black/20"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full bg-black/50 text-white">
+                  No Image
+                </div>
+              )}
+
+              {/* TITLE OVERLAY (Center only) */}
+              {pos === "center" && (
+                <div className="absolute bottom-3 w-full text-center">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-xl">
+                    {c.title}
+                  </h2>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* === RESPONSIVE DESCRIPTION AREA === */}
+      <div className="absolute bottom-5 w-[90%] sm:w-[80%] text-center text-white 
+                      text-sm sm:text-base md:text-lg lg:text-xl 
+                      leading-relaxed bg-black/30 backdrop-blur-sm
+                      p-3 sm:p-4 md:p-5 rounded-xl">
+        {active?.content}
+      </div>
+    </div>
+  );
+};
+
+
+
+
 
   /* ----------------------------------------------------------------------------------------
      🟣 THUMBNAIL GALLERY VIEW (bottom images → click to show big view)
@@ -486,13 +849,22 @@ function ScreenView() {
           backgroundPosition: "center",
         }}
       >
+        <div
+          className="absolute top-4 right-2 cursor-pointer z-[9999] pointer-events-auto"
+          onClick={() => navigate(`/container/${container}`)}
+        >
+          <img
+            src={containerLogo}
+            alt="logo"
+            className="h-48 w-auto object-contain animate-thumb-view"
+          />
+        </div>
 
-
-        <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-10 px-12 pt-10 relative">
+        <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-10 px-12 pt-15 relative pointer-events-none">
 
           {/* LEFT SIDE FULL IMAGE */}
           <div
-            className="w-full h-[70vh]  mt-20 rounded-xl shadow-2xl border border-white/10"
+            className="w-full h-[70vh] mt-20 rounded-xl shadow-2xl border border-white/10 pointer-events-auto"
             style={{
               backgroundImage: `url(${active.files[0]})`,
               backgroundSize: "cover",
@@ -750,6 +1122,11 @@ function ScreenView() {
   const DiagonalHomeView = () => {
     const navigate = useNavigate();
     const overlapVW = 15;
+    const [logoAnimated, setLogoAnimated] = useState(false);
+    useEffect(() => {
+      setLogoAnimated(true);  // start animating
+    }, []);
+
 
     return (
       <div
@@ -760,22 +1137,38 @@ function ScreenView() {
           backgroundPosition: "center",
         }}
       >
+
+        <div
+          className="absolute top-4 left-6 cursor-pointer z-[9999]"
+          style={{ perspective: "1200px" }}
+          onClick={() => {navigate(`/container/${container}`);}} 
+        >
+          <img
+            src={containerLogo}
+            alt="logo"
+            className={`h-48 w-auto object-contain z-[9999] ${
+              logoAnimated ? "logo-animate-diagonal" : ""
+            }`}
+          />
+        </div>
+
+
         {/* LEFT EMPTY AREA */}
         <div className="w-[10%] h-full relative flex items-center justify-center shrink-0">
 
           {/* BACK BUTTON CENTERED */}
           <div
-            onClick={() => {navigate(`/container/${container}`);}}  
-              // 👈 GO BACK
-            className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer select-none"
+            onClick={() => {navigate(`/container/${container}`);}} 
+            className="absolute cursor-pointer select-none flex items-center justify-center gap-3 m-4"
           >
-            <div className="text-white text-7xl font-extrabold drop-shadow-xl">←</div>
-            <p className="text-3xl font-bold text-white tracking-wide drop-shadow-xl mt-2">
+            <span className="text-white text-6xl font-bold drop-shadow">←</span>
+            <p className="text-3xl font-bold tracking-wide text-white drop-shadow mt-1">
               BACK
             </p>
           </div>
         </div>
 
+      
         {/* RIGHT SIDE */}
         <div className="w-[90%] h-full overflow-x-auto overflow-y-hidden whitespace-nowrap hide-scrollbar relative">
 
@@ -833,8 +1226,22 @@ function ScreenView() {
   };
 
 
+
   const DetailView = () => {
     if (!selected) return null;
+
+    // READ MORE state
+    // Slide-in animation (Right → Left)
+    const slideIn = {
+      initial: { x: 200, opacity: 0 },
+      animate: { x: 0, opacity: 1 },
+      transition: { duration: 0.8, ease: "easeOut" }
+    };
+
+    const text = selected.content || "";
+    const words = text.split(" ");
+    const isLong = words.length > 50;
+    const previewText = words.slice(0, 50).join(" ") + "...";
 
     return (
       <div
@@ -846,36 +1253,36 @@ function ScreenView() {
         }}
       >
 
-        {/* LEFT IMAGE SLANTED PANEL */}
-        <div
+        {/* === LEFT SLANTED IMAGE PANEL (ANIMATED) === */}
+        <motion.div
           className="absolute inset-y-0 left-0 w-1/3 ml-30"
           style={{
             backgroundImage: `url(${selected.files?.[0]})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             clipPath: "polygon(30% 0, 100% 0, 70% 100%, 0% 100%)",
-            backgroundColor: "rgba(0,0,0,0.55)",
           }}
+          initial="initial"
+          animate="animate"
+          variants={slideIn}
         >
-          {/* LOGO CENTERED */}
+          {/* CENTER LOGO CLICKABLE */}
           {selected.logo && (
-            <div className="absolute inset-0 flex items-center justify-center"
-              onClick={() => {
-              // setSelected(item);
-              setMode("diagonal-home");
-            }}
+            <div
+              className="absolute inset-0 flex items-center justify-center cursor-pointer"
+              onClick={() => setMode("diagonal-split-view")}
             >
               <img
                 src={selected.logo}
-                className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-2xl"
+                className="w-22 h-42 md:w-25 md:h-45 drop-shadow-2xl"
                 alt="Logo"
               />
             </div>
           )}
-        </div>
+        </motion.div>
 
-        {/* RIGHT SIDE TEXT BLOCK */}
-        <div
+        {/* === RIGHT SIDE TEXT BLOCK === */}
+        <motion.div
           className="
             absolute 
             top-1/2 
@@ -884,18 +1291,47 @@ function ScreenView() {
             bg-black/55 
             p-10 
             rounded-xl 
-            max-w-6xl 
+            max-w-5xl 
             shadow-xl
           "
         >
-          <h1 className="text-4xl font-bold mb-6">{selected.title}</h1>
+          <h1 className="text-3xl font-bold mb-6">{selected.title}</h1>
 
-          <p className="text-xl leading-relaxed whitespace-pre-line">
-            {selected.content}
-          </p>
-        </div>
+          {/* === READ MORE / READ LESS === */}
+          {!showFullText ? (
+            <>
+              <p className="text-xl leading-relaxed whitespace-pre-line">
+                {isLong ? previewText : text}
+              </p>
 
-        {/* QR CODE (BOTTOM-RIGHT) */}
+              {isLong && (
+                <button
+                  className="mt-3 text-yellow-300 underline font-semibold"
+                  onClick={() => setShowFullText(true)}
+                >
+                  Read More
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="max-h-[400px] overflow-y-auto pr-2">
+                <p className="text-xl leading-relaxed whitespace-pre-line">
+                  {text}
+                </p>
+              </div>
+
+              <button
+                className="mt-3 text-yellow-300 underline font-semibold"
+                onClick={() => setShowFullText(false)}
+              >
+                Read Less
+              </button>
+            </>
+          )}
+        </motion.div>
+
+        {/* === QR CODE (BOTTOM RIGHT) === */}
         {selected.qr_code_url && (
           <div className="absolute bottom-10 right-10 text-center">
             <img
@@ -911,8 +1347,9 @@ function ScreenView() {
   };
 
 
-
   const renderCardCarouselView = () => {
+
+
     return (
       <div
         className="w-full h-screen bg-cover bg-center relative p-10"
@@ -921,24 +1358,40 @@ function ScreenView() {
         {/* BACK BUTTON */}
         <div
           onClick={() => navigate(`/container/${container}`)}
-          className="absolute left-10 top-10 cursor-pointer select-none "
+          className="absolute left-10 top-10 cursor-pointer select-none flex items-center gap-3 z-50"
         >
-          <div 
-            className="text-white text-5xl font-bold drop-shadow" onClick={() => navigate(`/container/${container}`)}
-          >←</div>
-          <p className="text-xl font-bold tracking-wide text-white drop-shadow">
-            BACK 
+          <span className="text-white text-5xl font-bold drop-shadow">←</span>
+
+          <p className="text-2xl font-bold tracking-wide text-white drop-shadow mt-1">
+            BACK
           </p>
         </div>
 
+
         {/* TITLE */}
-        <h1 className="text-center text-4xl md:text-6xl font-bold text-white drop-shadow mb-12">
-          {screenName|| "CONTENT LIST"}
+        <h1 className="text-center text-4xl md:text-6xl font-bold text-white drop-shadow mb-16">
+          {screenName || "CONTENT LIST"}
         </h1>
 
-        {/* CARD ROW */}
-        <div className="w-full overflow-x-auto overflow-y-hidden">
+        <div
+            className="absolute top-4 right-2 cursor-pointer"
+            onClick={() => {
+              navigate(`/container/${container}`);
+              // setShowContentContainer(false);
+            }}
+          >
+            <img
+              src={containerLogo}
+              alt="logo"
+              className="h-38 w-auto object-contain"
+            />
+        </div>
+
+      
+        {/* HORIZONTAL SCROLL CARDS */}
+        <div className="w-full overflow-x-auto overflow-y-hidden pb-5 no-scrollbar">
           <div className="flex gap-10 flex-nowrap px-10 w-fit">
+
             {contents.map((item, index) => (
               <div
                 key={index}
@@ -947,92 +1400,166 @@ function ScreenView() {
                   setMode("card-detail");
                 }}
                 className="
-                  min-w-[360px] h-[720px]
-                  bg-white/20 backdrop-blur-md 
-                  rounded-2xl shadow-2xl overflow-hidden 
-                  cursor-pointer transition-transform 
-                  hover:scale-105
+                  relative 
+                  min-w-[300px] md:min-w-[350px] lg:min-w-[380px] 
+                  h-[680px] md:h-[740px] lg:h-[720px]
+                  rounded-3xl shadow-2xl overflow-hidden
+                  cursor-pointer transition-transform hover:scale-105
                 "
+                style={{
+                  backgroundImage: `url(${item.files?.[0]})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
               >
+
+
+                {/* <div className="absolute inset-0 bg-black/25"></div> */}
+
+                {/* IMAGE */}
                 <div
-                  className="w-full h-[75%] bg-cover bg-center"
+                  className="w-full h-full bg-cover bg-center"
                   style={{ backgroundImage: `url(${item.files?.[0]})` }}
                 ></div>
 
-                <div className="h-[25%] flex items-center justify-center p-4">
-                  <p className="text-white text-2xl font-bold text-center drop-shadow">
+                {/* TITLE OVERLAY - BOTTOM */}
+                <div className="
+                    absolute inset-0 
+                    bg-black/30 
+                    flex items-center justify-center 
+                    text-center p-4
+                  "
+                >
+                  <p className="text-white text-3xl md:text-4xl font-bold drop-shadow-lg">
                     {item.title}
                   </p>
                 </div>
+
               </div>
             ))}
+
           </div>
         </div>
-
-        
       </div>
     );
   };
 
+
   const renderCardDetailView = () => {
     if (!selected) return null;
 
+    
     return (
       <div
         className="w-full h-screen bg-cover bg-center relative p-10 text-white"
         style={{ backgroundImage: `url(${background})` }}
       >
-        {/* BACK */}
+        {/* BACK BUTTON */}
         <div
           onClick={() => setMode("card-carousel")}
-          className="absolute left-10 top-10 cursor-pointer select-none"
+          className="absolute left-10 top-10 cursor-pointer select-none flex items-center gap-3 z-50"
         >
-          <div className="text-white text-5xl font-bold drop-shadow">←</div>
-          <p className="text-xl font-bold tracking-wide drop-shadow">
+          <span className="text-white text-5xl font-bold drop-shadow">←</span>
+          <p className="text-2xl font-bold tracking-wide text-white drop-shadow mt-1">
             BACK
           </p>
+        </div>
+
+        <div className="flex justify-center mb-10 px-4 slide-up z-[9999]">
+            <div className="bg-yellow-400 text-black px-10 py-4 rounded-xl shadow-xl text-3xl font-bold text-center">
+              {selected.title}
+            </div>
+        </div>
+
+        <div
+            className="absolute top-4 right-2 cursor-pointer"
+            onClick={() => {
+              navigate(`/container/${container}`);
+              // setShowContentContainer(false);
+            }}
+          >
+            <img
+              src={containerLogo}
+              alt="logo"
+              className="h-48 w-auto object-contain"
+            />
         </div>
 
         {/* CENTER PANEL */}
         <div
           className="
-            absolute top-1/2 left-1/2 w-[90%] max-w-7xl mt-15
+            absolute left-1/2 w-[80%] max-w-7xl
             bg-white/20 backdrop-blur-xl p-12 rounded-3xl shadow-2xl
-            transform -translate-x-1/2 -translate-y-1/2
+            transform -translate-x-1/2
+            mt-20   /* 🟩 added space below TITLE */
+            top-[6%]   /* 🟩 shift panel down a bit */
           "
         >
-          {/* Title */}
-          <div className="flex justify-center mb-10">
-            <div className="bg-yellow-400 text-black px-12 py-5 rounded-xl shadow-xl text-3xl font-bold">
-              {selected.title}
-            </div>
-          </div>
-
+     
           {/* MAIN CONTENT BLOCK */}
-          <div className="flex flex-col md:flex-row gap-14 pb-24">
+          <div className="flex flex-col md:flex-row gap-12 pb-24 px-2 md:px-6">
 
             {/* LEFT IMAGE */}
-            <div className="w-full md:w-[40%]">
+
+            <div className="w-full md:w-[60%] flex flex-col items-center gap-6">
               <img
                 src={selected.files?.[0]}
-                className="w-full rounded-2xl shadow-xl"
+                className="w-full max-w-3xl rounded-2xl shadow-xl h-[80%]"
                 alt=""
               />
+
+              {/* View Gallery Button */}
+              {selected.has_subcontent && (
+                <button
+                  onClick={() => {
+                    setGalleryOpen(true);   // open gallery mode
+                  }}
+
+                  className="w-full max-w-3xl bg-white/30 backdrop-blur-lg text-white
+                            font-semibold text-xl py-4 rounded-xl shadow-lg border border-white/40"
+                >
+                  View Gallery
+                </button>
+              )}
             </div>
 
+
             {/* RIGHT TEXT */}
-            <div className="w-full md:w-[60%] text-xl leading-relaxed">
-              {selected.content}
+            <div className="w-full md:w-[50%] text-lg md:text-xl leading-relaxed">
+
+              {/* Show less = full text */}
+              {showFullText ? (
+                <>
+                  {selected.content}
+                  <button
+                    onClick={() => setShowFullText(false)}
+                    className="text-yellow-300 font-bold ml-2 underline"
+                  >
+                    Show less
+                  </button>
+                </>
+              ) : (
+                <>
+                  {trimWords(selected.content, 60)}
+                  <button
+                    onClick={() => setShowFullText(true)}
+                    className="text-yellow-300 font-bold ml-2 underline"
+                  >
+                    Show more
+                  </button>
+                </>
+              )}
+
             </div>
           </div>
 
-          {/* 🔥 BOTTOM FIXED QR CODE */}
+          {/* QR CODE */}
           {selected.qr_code_url && (
             <div className="absolute bottom-8 right-8 flex flex-col items-center">
               <img
                 src={selected.qr_code_url}
                 className="w-44 h-44 bg-white p-3 rounded-xl shadow-xl"
-                alt="QR Code"
+                alt="QR"
               />
               <span className="mt-2 text-white font-semibold">Learn More</span>
             </div>
@@ -1043,23 +1570,94 @@ function ScreenView() {
     );
   };
 
+  const renderGalleryView = () => {
+    const images = selected.sub_contents?.[0].gallery_images || [];
+
+    return (
+      <div
+        className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[9999] flex flex-col items-center pt-10 px-4 text-white"
+      >
+        {/* CARD CONTAINER */}
+        <div
+          className="
+            w-full max-w-6xl 
+            bg-black/70 border border-white/10 
+            rounded-3xl shadow-2xl
+            p-10
+            mt-10
+            flex flex-col
+            items-center
+          "
+        >
+          {/* BACK BUTTON */}
+          <div
+            onClick={() => setGalleryOpen(false)}
+            className="cursor-pointer flex items-center gap-3 mb-4 self-start"
+          >
+            <span className="text-white text-2xl font-bold drop-shadow">←</span>
+            <p className="text-xl font-bold drop-shadow">BACK</p>
+          </div>
+
+          {/* TITLE */}
+          <h1 className="text-2xl md:text-2xl font-bold text-center mb-8">
+            View Gallery
+          </h1>
+
+          {/* SCROLLABLE IMAGE GRID (ONLY THIS AREA SCROLLS) */}
+          <div
+            className="
+              grid 
+              grid-cols-1 
+              sm:grid-cols-2 
+              md:grid-cols-3 
+              gap-8
+              w-full
+              overflow-y-auto
+              pr-3
+            "
+            style={{ maxHeight: "65vh" }} // 👈 Fixed height area for scrolling
+          >
+            {images.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                className="w-full h-60 md:h-64 object-cover rounded-xl shadow-xl border border-white/20"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
+
+  
+
   /* ----------------------------------------------------------------------------------------
      🔥 FINAL OUTPUT (SELECT DISPLAY MODE)
   -----------------------------------------------------------------------------------------*/
   return (
     <>
-      {displayMode === "normal-view" && renderNormalView()}
-      {displayMode === "slide-view" && renderSlideView()}
-      {displayMode === "thumbnail-gallery" && renderThumbnailGalleryView()}
-       {/* NEW UI MODES */}
+      {/* Presentation view must override all */}
+      {mode === "presentation-view" && <PresentationView />}
+
+      {mode === "normal-view" && renderNormalView()}
+      {mode === "slide-view" && renderSlideView()}
+      {mode === "thumbnail-gallery" && renderThumbnailGalleryView()}
+
       {mode === "card-carousel" && renderCardCarouselView()}
       {mode === "card-detail" && renderCardDetailView()}
 
       {mode === "diagonal-split-view" && <DiagonalHomeView />}
       {mode === "detail" && <DetailView />}
+      {galleryOpen && renderGalleryView()}
 
     </>
   );
+
+
 }
 
 export default ScreenView;
+
