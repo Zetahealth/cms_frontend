@@ -422,6 +422,7 @@ function Screens() {
                 <option value="slide-view">Slide View</option>
                 <option value="diagonal-split-view">Diagonal Split View</option>
                 <option value="card-carousel">Card Carousel</option>
+                <option value="slider-thumbnail-view">Slide With Thumbnail View</option>
             </select>
             {errors.displayMode && (
                 <p className="text-red-500 text-sm mt-1">{errors.displayMode}</p>
@@ -628,6 +629,7 @@ function Screens() {
                     <option value="slide-view">Slide View</option>
                     <option value="diagonal-split-view">Diagonal Split View</option>
                     <option value="card-carousel">Card Carousel</option>
+                    <option value="slider-thumbnail-view">Slide With Thumbnail View</option>
 
                 </select>
                 {errors.mode && (

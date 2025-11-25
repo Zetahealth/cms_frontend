@@ -62,31 +62,6 @@ function ScreenView() {
     return () => subscription.unsubscribe();
   }, [slug]);
 
-  // async function fetchContents() {
-  //   try {
-  //     const res = await fetch(`${Api}/api/v1/screen_contents/${slug}`, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
-
-  //     const data = await res.json();
-  //     console.log("✅ Fetched contents:-----------------------", data);
-  //     setContents(data.contents || []);
-  //     setBackground(data.background_url);
-  //     setContainer(data.container_ids[0] || null);
-  //     setDisplayMode(data.display_mode || "normal-view");
-  //     if (!mode) {
-  //       setMode(data.display_mode || "diagonal-split-view");
-  //     }
-
-  //     setScreenName(data.screen_name || "");
-
-  //   } catch (err) {
-  //     console.error("❌ Error:", err);
-  //   }
-  // }
 
   async function fetchContents() {
     try {
@@ -104,23 +79,9 @@ function ScreenView() {
       setContainer(data.container_ids[0] || null);
       setScreenName(data.screen_name || "");
       setContainerLogo(data.container_files || null)
-
       // console.log("aaaaaaaaaaaaaaaaaaaaaaaa-----------",data)
       setMode(data.display_mode)
-      // 🔥 Backend display mode becomes the initial UI view
 
-      // setMode((prev) => {
-      //   // Don't override presentation-view mid-session
-      //   if (prev === "presentation-view") return prev;
-
-      //   // Use backend value only when screen loads first time
-      //   if (prev === "diagonal-split-view" || prev === "normal-view") {
-      //     return data.display_mode || prev;
-      //   }
-
-      //   // Otherwise keep whatever user is looking at
-      //   return prev;
-      // });
 
     } catch (err) {
       console.error("❌ Error:", err);
@@ -582,289 +543,182 @@ function ScreenView() {
   };
 
 
-  // const renderSlideView = () => {
-  //   const prev = () =>
-  //     setActiveIndex((prev) => (prev === 0 ? contents.length - 1 : prev - 1));
-
-  //   const next = () =>
-  //     setActiveIndex((prev) => (prev === contents.length - 1 ? 0 : prev + 1));
-
-  //   const getPosition = (index) => {
-  //     if (index === activeIndex) return "center";
-  //     if (index === activeIndex - 1) return "left";
-  //     if (index === activeIndex + 1) return "right";
-  //     return "hidden";
-  //   };
-
-  //   const active = contents[activeIndex];
-
-  //   return (
-  //     <div
-  //       className="relative flex flex-col items-center justify-center h-screen overflow-hidden"
-  //       style={{
-  //         backgroundImage: `url(${background})`,
-  //         backgroundSize: "cover",
-  //         backgroundPosition: "center",
-  //       }}
-  //     >
-  //       <div
-  //           className="absolute top-4  cursor-pointer"
-  //           onClick={() => {
-  //             navigate(`/container/${container}`);
-  //             // setShowContentContainer(false);
-  //           }}
-  //         >
-  //           <img
-  //             src={containerLogo}
-  //             alt="logo"
-  //             className="h-48 w-auto object-contain"
-  //           />
-  //       </div>
-
-
-  //       {/* === MAIN SLIDER AREA (TOP LIKE IMAGE) === */}
-  //       <div className="relative w-full h-[65%] flex items-center justify-center">
-  //         {contents.map((c, index) => {
-  //           const pos = getPosition(index);
-
-  //           let style = {
-  //             position: "absolute",
-  //             width: "48%",
-  //             height: "70%",
-  //             borderRadius: "10px",
-  //             overflow: "hidden",
-  //             transition: "all 0.7s ease",
-  //             opacity: 0.4,
-  //             zIndex: 10,
-  //             filter: "grayscale(40%)",
-  //           };
-
-  //           if (pos === "center") {
-  //             style.transform = "scale(1)";
-  //             style.opacity = 1;
-  //             style.zIndex = 40;
-  //             style.filter = "grayscale(0%)";
-  //           } else if (pos === "left") {
-  //             style.transform = "translateX(-420px) scale(0.8)";
-  //             style.opacity = 0.5;
-  //             style.zIndex = 20;
-  //           } else if (pos === "right") {
-  //             style.transform = "translateX(420px) scale(0.8)";
-  //             style.opacity = 0.5;
-  //             style.zIndex = 20;
-  //           }
-
-  //           const handleClick = () => {
-  //             if (pos === "left") prev();
-  //             else if (pos === "right") next();
-  //             else if (pos === "center") {
-  //               console.log("(====================)",c)
-  //               setSelected(c);    // Load clicked slide content
-  //               if(c.has_subcontent){
-  //                 setMode("presentation-view");  // Switch to PresentationView
-  //               }
-  //             }
-  //           };
-
-
-  //           return (
-  //             <motion.div key={index} style={style} onClick={handleClick}>
-  //               {c.files?.[0] ? (
-  //                 <img
-  //                   src={c.files[0]}
-  //                   className="w-full h-full object-cover"
-  //                 />
-  //               ) : (
-  //                 <div className="flex items-center justify-center w-full h-full bg-black/50 text-white">
-  //                   No Image
-  //                 </div>
-  //               )}
-
-  //               {/* === TITLE OVERLAY LIKE VIDEO === */}
-  //               {pos === "center" && (
-  //                 <div className="absolute bottom-4 w-full text-center">
-  //                   <h2 className="text-4xl font-bold text-white drop-shadow-xl">
-  //                     {c.title}
-  //                   </h2>
-  //                 </div>
-  //               )}
-  //             </motion.div>
-  //           );
-  //         })}
-  //       </div>
-
-  //       {/* === DESCRIPTION AREA (BOTTOM) === */}
-  //       <div className="absolute bottom-8 w-[80%] text-center text-white text-xl leading-relaxed bg-black/20 p-4 rounded-xl">
-  //         {active?.content}
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
 
   const renderSlideView = () => {
-  const prev = () =>
-    setActiveIndex((prev) => (prev === 0 ? contents.length - 1 : prev - 1));
+    const prev = () =>
+      setActiveIndex((prev) => (prev === 0 ? contents.length - 1 : prev - 1));
 
-  const next = () =>
-    setActiveIndex((prev) =>
-      prev === contents.length - 1 ? 0 : prev + 1
-    );
+    const next = () =>
+      setActiveIndex((prev) =>
+        prev === contents.length - 1 ? 0 : prev + 1
+      );
 
-  const getPosition = (index) => {
-    if (index === activeIndex) return "center";
-    if (index === activeIndex - 1) return "left";
-    if (index === activeIndex + 1) return "right";
-    return "hidden";
-  };
+    const getPosition = (index) => {
+      if (index === activeIndex) return "center";
+      if (index === activeIndex - 1) return "left";
+      if (index === activeIndex + 1) return "right";
+      return "hidden";
+    };
 
-  const active = contents[activeIndex];
-
-  return (
-    <div
-      className="relative flex flex-col items-center justify-center h-screen overflow-hidden"
-      style={{
-        backgroundImage: `url(${background})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      {/* LOGO */}
-      <div
-        className="absolute top-4 cursor-pointer z-50"
-        onClick={() => navigate(`/container/${container}`)}
-      >
-        <img
-          src={containerLogo}
-          alt="logo"
-          className="h-20 sm:h-24 md:h-32 lg:h-40 w-auto object-contain"
-        />
-      </div>
-
-      {/* === RESPONSIVE SLIDER === */}
-      <div className="relative w-full h-[60%] sm:h-[65%] md:h-[70%] flex items-center justify-center">
-        {contents.map((c, index) => {
-          const pos = getPosition(index);
-
-          // RESPONSIVE SLIDE BASE STYLE
-          let style = {
-            position: "absolute",
-            width: "80vw",
-            maxWidth: "600px",
-            height: "45vh",
-            maxHeight: "380px",
-            borderRadius: "12px",
-            overflow: "hidden",
-            transition: "all 0.6s ease",
-            opacity: 0.4,
-            zIndex: 10,
-            filter: "grayscale(40%)",
-          };
-
-          // RESPONSIVE OFFSETS
-          const mobileOffset = "42vw";
-          const desktopOffset = "350px";
-
-          // Choose offset depending on screen width
-          const offset = window.innerWidth < 768 ? mobileOffset : desktopOffset;
-
-          if (pos === "center") {
-            style.transform = "scale(1)";
-            style.opacity = 1;
-            style.zIndex = 40;
-            style.filter = "grayscale(0%)";
-          } else if (pos === "left") {
-            style.transform = `translateX(-${offset}) scale(0.85)`;
-            style.opacity = 0.5;
-            style.zIndex = 20;
-          } else if (pos === "right") {
-            style.transform = `translateX(${offset}) scale(0.85)`;
-            style.opacity = 0.5;
-            style.zIndex = 20;
-          }
-
-          const handleClick = () => {
-            if (pos === "left") prev();
-            else if (pos === "right") next();
-            else if (pos === "center") {
-              setSelected(c);
-              if (c.has_subcontent) setMode("presentation-view");
-            }
-          };
-
-          return (
-            <motion.div key={index} style={style} onClick={handleClick}>
-              {/* IMAGE FULLY VISIBLE – NO CROP */}
-              {c.files?.[0] ? (
-                <img
-                  src={c.files[0]}
-                  className="w-full h-full object-contain bg-black/20"
-                />
-              ) : (
-                <div className="flex items-center justify-center w-full h-full bg-black/50 text-white">
-                  No Image
-                </div>
-              )}
-
-              {/* TITLE OVERLAY (Center only) */}
-              {pos === "center" && (
-                <div className="absolute bottom-3 w-full text-center">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-xl">
-                    {c.title}
-                  </h2>
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* === RESPONSIVE DESCRIPTION AREA === */}
-      <div className="absolute bottom-5 w-[90%] sm:w-[80%] text-center text-white 
-                      text-sm sm:text-base md:text-lg lg:text-xl 
-                      leading-relaxed bg-black/30 backdrop-blur-sm
-                      p-3 sm:p-4 md:p-5 rounded-xl">
-        {active?.content}
-      </div>
-    </div>
-  );
-};
-
-
-
-
-
-  /* ----------------------------------------------------------------------------------------
-     🟣 THUMBNAIL GALLERY VIEW (bottom images → click to show big view)
-  -----------------------------------------------------------------------------------------*/
-  const renderThumbnailGalleryView = () => {
     const active = contents[activeIndex];
 
     return (
       <div
-        className="relative w-full h-screen flex flex-col"
+        className="relative flex flex-col items-center justify-center h-screen overflow-hidden"
         style={{
           backgroundImage: `url(${background})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
+        {/* LOGO */}
         <div
-          className="absolute top-4 right-2 cursor-pointer z-[9999] pointer-events-auto"
+          className="absolute top-4 cursor-pointer z-50"
           onClick={() => navigate(`/container/${container}`)}
         >
           <img
             src={containerLogo}
             alt="logo"
-            className="h-48 w-auto object-contain animate-thumb-view"
+            className="h-20 sm:h-24 md:h-32 lg:h-40 w-auto object-contain"
           />
         </div>
 
-        <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-10 px-12 pt-15 relative pointer-events-none">
+        {/* === RESPONSIVE SLIDER === */}
+        <div className="relative w-full h-[60%] sm:h-[65%] md:h-[70%] flex items-center justify-center">
+          {contents.map((c, index) => {
+            const pos = getPosition(index);
 
-          {/* LEFT SIDE FULL IMAGE */}
+            // RESPONSIVE SLIDE BASE STYLE
+            let style = {
+              position: "absolute",
+              width: "80vw",
+              maxWidth: "600px",
+              height: "45vh",
+              maxHeight: "380px",
+              borderRadius: "12px",
+              overflow: "hidden",
+              transition: "all 0.6s ease",
+              opacity: 0.4,
+              zIndex: 10,
+              filter: "grayscale(40%)",
+            };
+
+            // RESPONSIVE OFFSETS
+            const mobileOffset = "42vw";
+            const desktopOffset = "350px";
+
+            // Choose offset depending on screen width
+            const offset = window.innerWidth < 768 ? mobileOffset : desktopOffset;
+
+            if (pos === "center") {
+              style.transform = "scale(1)";
+              style.opacity = 1;
+              style.zIndex = 40;
+              style.filter = "grayscale(0%)";
+            } else if (pos === "left") {
+              style.transform = `translateX(-${offset}) scale(0.85)`;
+              style.opacity = 0.5;
+              style.zIndex = 20;
+            } else if (pos === "right") {
+              style.transform = `translateX(${offset}) scale(0.85)`;
+              style.opacity = 0.5;
+              style.zIndex = 20;
+            }
+
+            const handleClick = () => {
+              if (pos === "left") prev();
+              else if (pos === "right") next();
+              else if (pos === "center") {
+                setSelected(c);
+                if (c.has_subcontent) setMode("presentation-view");
+              }
+            };
+
+            return (
+              <motion.div key={index} style={style} onClick={handleClick}>
+                {/* IMAGE FULLY VISIBLE – NO CROP */}
+                {c.files?.[0] ? (
+                  <img
+                    src={c.files[0]}
+                    className="w-full h-full object-contain bg-black/20"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full bg-black/50 text-white">
+                    No Image
+                  </div>
+                )}
+
+                {/* TITLE OVERLAY (Center only) */}
+                {pos === "center" && (
+                  <div className="absolute bottom-3 w-full text-center">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-xl">
+                      {c.title}
+                    </h2>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* === RESPONSIVE DESCRIPTION AREA === */}
+        <div className="absolute bottom-5 w-[90%] sm:w-[80%] text-center text-white 
+                        text-sm sm:text-base md:text-lg lg:text-xl 
+                        leading-relaxed bg-black/30 backdrop-blur-sm
+                        p-3 sm:p-4 md:p-5 rounded-xl">
+          {active?.content}
+        </div>
+      </div>
+    );
+  };
+
+  /* ----------------------------------------------------------------------------------------
+     🟣 THUMBNAIL GALLERY VIEW (bottom images → click to show big view)
+  -----------------------------------------------------------------------------------------*/
+
+
+  const renderThumbnailGalleryView = () => {
+    const active = contents[activeIndex];
+
+    return (
+      <div
+        className="relative w-full min-h-screen flex flex-col"
+        style={{
+          backgroundImage: `url(${background})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+
+        {/* ===== TOP RIGHT LOGO (Responsive size) ===== */}
+        <div
+          className="absolute top-3 right-3 cursor-pointer z-[9999]"
+          onClick={() => navigate(`/container/${container}`)}
+        >
+          <img
+            src={containerLogo}
+            alt="logo"
+            className="h-20 w-auto md:h-40 object-contain animate-thumb-view"
+          />
+        </div>
+
+        {/* ===== MAIN LAYOUT GRID ===== */}
+        <div className="
+          flex-grow 
+          grid grid-cols-1 md:grid-cols-2 
+          gap-6 md:gap-10 
+          px-4 md:px-12 
+          pt-20 md:pt-28
+        ">
+
+          {/* ===== LEFT FULL IMAGE ===== */}
           <div
-            className="w-full h-[70vh] mt-20 rounded-xl shadow-2xl border border-white/10 pointer-events-auto"
+            className="
+              w-full 
+              h-[40vh] md:h-[65vh] 
+              rounded-xl shadow-2xl 
+              border border-white/10
+            "
             style={{
               backgroundImage: `url(${active.files[0]})`,
               backgroundSize: "cover",
@@ -872,15 +726,20 @@ function ScreenView() {
             }}
           ></div>
 
-          {/* RIGHT SIDE CONTENT */}
-          <div className="flex flex-col mt-20  justify-start items-start relative">
+          {/* ===== RIGHT TEXT BLOCK ===== */}
+          <div className="flex flex-col justify-start items-start">
 
-            {/* === TEXT BLOCK === */}
-            <div className="bg-black/35 backdrop-blur-sm p-16 rounded-xl max-w-4xl shadow-xl">
+            <div className="
+              bg-black/35 backdrop-blur-sm 
+              p-5 md:p-10 lg:p-16 
+              rounded-xl 
+              w-full max-w-4xl 
+              shadow-xl
+            ">
 
               {!showFullText ? (
                 <>
-                  <p className="text-white text-3xl leading-relaxed">
+                  <p className="text-white text-xl md:text-2xl lg:text-3xl leading-relaxed">
                     {limitWords(active?.content, 100)}
                   </p>
 
@@ -895,8 +754,8 @@ function ScreenView() {
                 </>
               ) : (
                 <>
-                  <div className="max-h-[500px] overflow-y-auto pr-2">
-                    <p className="text-white text-3xl leading-relaxed">
+                  <div className="max-h-[300px] md:max-h-[400px] overflow-y-auto pr-2">
+                    <p className="text-white text-xl md:text-2xl lg:text-3xl leading-relaxed">
                       {active?.content}
                     </p>
                   </div>
@@ -913,211 +772,53 @@ function ScreenView() {
             </div>
           </div>
 
-          {/* === QR CODE FIXED ON RIGHT === */}
+          {/* ===== QR CODE (Right-Bottom, Responsive) ===== */}
           {active?.qr_code_url && (
-            <div className="absolute bottom-5 right-10 flex flex-col items-center">
+            <div className="absolute bottom-5 right-5 flex flex-col items-center">
               <img
                 src={active.qr_code_url}
-                className="w-40 h-40 bg-white p-2 rounded-xl shadow-2xl"
+                className="w-24 h-24 md:w-36 md:h-36 lg:w-40 lg:h-40 bg-white p-2 rounded-xl shadow-2xl"
                 alt="QR Code"
               />
-              <span className="mt-2 text-white font-semibold">Learn More</span>
+              <span className="mt-2 text-white font-semibold text-xs md:text-base">
+                Learn More
+              </span>
             </div>
           )}
 
         </div>
 
-        {/* ========== BOTTOM THUMBNAILS ========== */}
-        <div className="w-full p-4 bg-black/40 flex gap-4 overflow-x-auto border-t border-white/30">
+        {/* ===== THUMBNAILS ROW (Responsive scroll) ===== */}
+        <div className="
+          w-full p-3 md:p-4 
+          bg-black/40 
+          flex gap-2 md:gap-4 
+          overflow-x-auto 
+          border-t border-white/30
+        ">
           {contents.map((c, i) => (
             <img
               key={i}
               src={c.files?.[0]}
               alt=""
               onClick={() => setActiveIndex(i)}
-              className={`h-30 w-32 object-cover rounded-lg cursor-pointer border-4 transition-all duration-300 ${
-                activeIndex === i
-                  ? "border-yellow-400 scale-105"
-                  : "border-transparent opacity-60 hover:opacity-100"
-              }`}
+              className={`
+                h-20 w-24 md:h-28 md:w-32 
+                object-cover rounded-lg cursor-pointer 
+                border-2 md:border-4 transition-all duration-300 
+                ${
+                  activeIndex === i
+                    ? "border-yellow-400 scale-105"
+                    : "border-transparent opacity-60 hover:opacity-100"
+                }
+              `}
             />
           ))}
         </div>
+
       </div>
     );
   };
-
-  // const DiagonalHomeView = () => {
-  //   // Responsive: panel width = 40vw, overlap = 15vw
-  //   const panelWidth = "32vw";
-  //   const overlapVW = 15; // responsive overlap in vw
-
-  //   return (
-  //     <div className="relative w-full h-screen overflow-hidden flex"
-  //       style={{
-  //         backgroundImage: `url(${background})`,
-  //         backgroundSize: "cover",
-  //         backgroundPosition: "center",
-  //       }}
-  //     >
-
-  //       {/* LEFT EMPTY AREA (25%) */}
-  //       <div className="w-[20%] h-full relative flex items-center shrink-0">
-
-  //         {/* BACK BUTTON */}
-  //         <div
-  //           onClick={() => console.log("BACK CLICKED")}
-  //           className="absolute left-10 top-1/2 -translate-y-1/2 cursor-pointer select-none"
-  //         >
-  //           <div className="text-black text-6xl font-bold">←</div>
-  //           <p className="text-2xl font-bold text-black tracking-wider mt-2">
-  //             BACK
-  //           </p>
-  //         </div>
-  //       </div>
-
-  //       {/* RIGHT SIDE – Horizontal scroll area */}
-  //       <div className="w-[80%] h-full overflow-x-auto overflow-y-hidden relative whitespace-nowrap ">
-          
-  //         {contents.map((item, index) => (
-  //           <div
-  //             key={index}
-  //             onClick={() => {
-  //               setSelected(item);
-  //               setMode("detail");
-  //             }}
-  //             className="inline-block h-full relative cursor-pointer group"
-  //             style={{
-  //               width: panelWidth,
-  //               transform: `translateX(-${index * overlapVW}vw)`,
-  //               clipPath: "polygon(30% 0, 100% 0, 70% 100%, 0% 100%)",
-  //             }}
-  //           >
-  //             {/* Background */}
-  //             <div
-  //               className="absolute inset-0 bg-cover bg-center brightness-75 
-  //                         group-hover:brightness-100 transition-all duration-700"
-  //               style={{ backgroundImage: `url(${item.files?.[0]})` }}
-  //             />
-
-  //             {/* Center logo + title */}
-  //             <div className="absolute inset-0 flex flex-col items-center justify-center">
-  //               {item.logo && (
-  //                 <img
-  //                   src={item.logo}
-  //                   className="w-24 h-24 md:w-32 md:h-32 drop-shadow-2xl 
-  //                             group-hover:scale-110 transition-all"
-  //                   alt=""
-  //                 />
-  //               )}
-
-  //               <p className="text-white text-2xl md:text-3xl font-bold mt-4 drop-shadow-xl tracking-wide whitespace-normal text-center">
-  //                 {item.title}
-  //               </p>
-  //             </div>
-
-  //             {/* Overlay */}
-  //             <div className="absolute inset-0 bg-black/20" />
-  //           </div>
-  //         ))}
-
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
-  // const DiagonalHomeView = () => {
-  //   const overlapVW = 15;
-
-  //   return (
-  //     <div
-  //       className="relative w-full h-screen overflow-hidden flex"
-  //       style={{
-  //         backgroundImage: `url(${background})`,
-  //         backgroundSize: "cover",
-  //         backgroundPosition: "center",
-  //       }}
-  //     >
-  //       {/* LEFT EMPTY AREA */}
-  //       <div className="w-[10%] h-full relative flex items-center justify-center shrink-0">
-
-  //         {/* BACK BUTTON CENTERED */}
-  //         <div
-  //           // onClick={() => console.log("BACK CLICKED")}
-  //           onClick={() => navigate(-1)}
-  //           className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer select-none"
-  //         >
-  //           <div className="text-white text-7xl font-extrabold drop-shadow-xl">←</div>
-  //           <p className="text-3xl font-bold text-white tracking-wide drop-shadow-xl mt-2">
-  //             BACK
-  //           </p>
-  //         </div>
-  //       </div>
-
-  //       {/* RIGHT SIDE – Sliding Panels */}
-  //       <div className="w-[90%] h-full overflow-x-auto overflow-y-hidden whitespace-nowrap hide-scrollbar relative">
-
-  //         {contents.map((item, index) => (
-  //           <div
-  //             key={index}
-  //             onClick={() => {
-  //               setSelected(item);
-  //               setMode("detail");
-  //             }}
-  //             className="
-  //               inline-block 
-  //               h-full 
-  //               relative 
-  //               cursor-pointer 
-  //               group
-  //               w-[80vw] sm:w-[60vw] md:w-[45vw] lg:w-[42vw]
-  //             "
-  //             style={{
-  //               transform: `translateX(-${index * overlapVW}vw)`,
-  //               clipPath: "polygon(30% 0, 100% 0, 70% 100%, 0% 100%)",
-  //             }}
-  //           >
-  //             {/* Background */}
-  //             <div
-  //               className="absolute inset-0 bg-cover bg-center brightness-75 
-  //                         group-hover:brightness-100 transition-all duration-700"
-  //               style={{ backgroundImage: `url(${item.files?.[0]})` }}
-  //             />
-
-  //             {/* LOGO + TITLE CENTERED */}
-  //             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-  //               <div
-  //                 className="
-  //                   w-full flex flex-col items-center justify-center text-center
-  //                   translate-x-[2%] -translate-y-[5%]
-  //                 "
-  //               >
-  //                 {item.logo && (
-  //                   <img
-  //                     src={item.logo}
-  //                     className="w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-xl 
-  //                               group-hover:scale-110 transition-transform duration-500"
-  //                     alt=""
-  //                   />
-  //                 )}
-
-  //                 <p className="text-white text-xl md:text-3xl font-bold mt-4 
-  //                               drop-shadow-2xl tracking-wide uppercase text-center">
-  //                   {item.title}
-  //                 </p>
-  //               </div>
-  //             </div>
-
-  //             {/* Dark overlay */}
-  //             <div className="absolute inset-0 bg-black/15"></div>
-  //           </div>
-  //         ))}
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
-
 
   const DiagonalHomeView = () => {
     const navigate = useNavigate();
@@ -1224,8 +925,6 @@ function ScreenView() {
       </div>
     );
   };
-
-
 
   const DetailView = () => {
     if (!selected) return null;
@@ -1346,51 +1045,44 @@ function ScreenView() {
     );
   };
 
-
   const renderCardCarouselView = () => {
-
-
     return (
       <div
-        className="w-full h-screen bg-cover bg-center relative p-10"
+        className="w-full min-h-screen bg-cover bg-center relative p-4 md:p-10"
         style={{ backgroundImage: `url(${background})` }}
       >
         {/* BACK BUTTON */}
-        <div
+        {/* <div
           onClick={() => navigate(`/container/${container}`)}
-          className="absolute left-10 top-10 cursor-pointer select-none flex items-center gap-3 z-50"
+          className="absolute left-4 md:left-10 top-4 md:top-10 cursor-pointer select-none flex items-center gap-2 md:gap-3 z-50"
         >
-          <span className="text-white text-5xl font-bold drop-shadow">←</span>
+          <span className="text-white text-3xl md:text-5xl font-bold drop-shadow">←</span>
 
-          <p className="text-2xl font-bold tracking-wide text-white drop-shadow mt-1">
+          <p className="text-white text-lg md:text-2xl font-bold tracking-wide drop-shadow mt-1">
             BACK
           </p>
-        </div>
-
+        </div> */}
 
         {/* TITLE */}
-        <h1 className="text-center text-4xl md:text-6xl font-bold text-white drop-shadow mb-16">
+        <h1 className="text-center text-3xl md:text-6xl font-bold text-white drop-shadow mb-8 md:mb-16 px-4">
           {screenName || "CONTENT LIST"}
         </h1>
 
+        {/* LOGO */}
         <div
-            className="absolute top-4 right-2 cursor-pointer"
-            onClick={() => {
-              navigate(`/container/${container}`);
-              // setShowContentContainer(false);
-            }}
-          >
-            <img
-              src={containerLogo}
-              alt="logo"
-              className="h-38 w-auto object-contain"
-            />
+          className="absolute top-2 md:top-4 right-2 md:right-4 cursor-pointer"
+          onClick={() => navigate(`/container/${container}`)}
+        >
+          <img
+            src={containerLogo}
+            alt="logo"
+            className="h-16 md:h-36 w-auto object-contain"
+          />
         </div>
 
-      
         {/* HORIZONTAL SCROLL CARDS */}
         <div className="w-full overflow-x-auto overflow-y-hidden pb-5 no-scrollbar">
-          <div className="flex gap-10 flex-nowrap px-10 w-fit">
+          <div className="flex gap-6 md:gap-10 flex-nowrap px-4 md:px-10 w-fit">
 
             {contents.map((item, index) => (
               <div
@@ -1400,37 +1092,27 @@ function ScreenView() {
                   setMode("card-detail");
                 }}
                 className="
-                  relative 
-                  min-w-[300px] md:min-w-[350px] lg:min-w-[380px] 
-                  h-[680px] md:h-[740px] lg:h-[720px]
-                  rounded-3xl shadow-2xl overflow-hidden
+                  relative
+                  min-w-[220px] sm:min-w-[260px] md:min-w-[340px] lg:min-w-[380px]
+                  h-[380px] sm:h-[460px] md:h-[620px] lg:h-[720px]
+                  rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden
                   cursor-pointer transition-transform hover:scale-105
+                  bg-cover bg-center
                 "
                 style={{
                   backgroundImage: `url(${item.files?.[0]})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
                 }}
               >
 
+                {/* Overlay for readability */}
+                <div className="absolute inset-0 bg-black/30"></div>
 
-                {/* <div className="absolute inset-0 bg-black/25"></div> */}
-
-                {/* IMAGE */}
-                <div
-                  className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${item.files?.[0]})` }}
-                ></div>
-
-                {/* TITLE OVERLAY - BOTTOM */}
+                {/* TITLE */}
                 <div className="
-                    absolute inset-0 
-                    bg-black/30 
-                    flex items-center justify-center 
-                    text-center p-4
-                  "
-                >
-                  <p className="text-white text-3xl md:text-4xl font-bold drop-shadow-lg">
+                  absolute inset-0 flex items-center justify-center 
+                  text-center p-2 sm:p-4
+                ">
+                  <p className="text-white text-xl sm:text-2xl md:text-4xl font-bold drop-shadow-lg px-2">
                     {item.title}
                   </p>
                 </div>
@@ -1444,90 +1126,88 @@ function ScreenView() {
     );
   };
 
-
+  
   const renderCardDetailView = () => {
     if (!selected) return null;
 
-    
     return (
       <div
-        className="w-full h-screen bg-cover bg-center relative p-10 text-white"
+        className="w-full min-h-screen bg-cover bg-center relative p-4 md:p-10 text-white"
         style={{ backgroundImage: `url(${background})` }}
       >
+
         {/* BACK BUTTON */}
         <div
           onClick={() => setMode("card-carousel")}
-          className="absolute left-10 top-10 cursor-pointer select-none flex items-center gap-3 z-50"
+          className="absolute left-4 md:left-10 top-4 md:top-10 cursor-pointer select-none flex items-center gap-2 md:gap-3 z-50"
         >
-          <span className="text-white text-5xl font-bold drop-shadow">←</span>
-          <p className="text-2xl font-bold tracking-wide text-white drop-shadow mt-1">
+          <span className="text-white text-3xl md:text-5xl font-bold drop-shadow">←</span>
+          <p className="text-lg md:text-2xl font-bold tracking-wide drop-shadow mt-1">
             BACK
           </p>
         </div>
 
-        <div className="flex justify-center mb-10 px-4 slide-up z-[9999]">
-            <div className="bg-yellow-400 text-black px-10 py-4 rounded-xl shadow-xl text-3xl font-bold text-center">
-              {selected.title}
-            </div>
+        {/* TITLE */}
+        <div className="flex justify-center mb-6 md:mb-10 px-2 slide-up z-[9999]">
+          <div className="bg-yellow-400 text-black px-6 md:px-10 py-3 md:py-4 rounded-xl shadow-xl 
+                          text-xl md:text-3xl font-bold text-center">
+            {selected.title}
+          </div>
         </div>
 
+        {/* LOGO */}
         <div
-            className="absolute top-4 right-2 cursor-pointer"
-            onClick={() => {
-              navigate(`/container/${container}`);
-              // setShowContentContainer(false);
-            }}
-          >
-            <img
-              src={containerLogo}
-              alt="logo"
-              className="h-48 w-auto object-contain"
-            />
+          className="absolute top-2 md:top-4 right-2 md:right-4 cursor-pointer"
+          onClick={() => navigate(`/container/${container}`)}
+        >
+          <img
+            src={containerLogo}
+            alt="logo"
+            className="h-20 w-auto md:h-40 object-contain"
+          />
         </div>
 
         {/* CENTER PANEL */}
         <div
           className="
-            absolute left-1/2 w-[80%] max-w-7xl
-            bg-white/20 backdrop-blur-xl p-12 rounded-3xl shadow-2xl
+            absolute left-1/2 w-[95%] sm:w-[90%] md:w-[80%] max-w-7xl
+            bg-white/20 backdrop-blur-xl p-6 md:p-12 rounded-3xl shadow-2xl
             transform -translate-x-1/2
-            mt-20   /* 🟩 added space below TITLE */
-            top-[6%]   /* 🟩 shift panel down a bit */
+            top-[22%] sm:top-[20%] md:top-[15%]   /* ✅ FIX: added more spacing */
+            z-[50]
           "
         >
-     
+
+      
           {/* MAIN CONTENT BLOCK */}
-          <div className="flex flex-col md:flex-row gap-12 pb-24 px-2 md:px-6">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-12 pb-16 md:pb-24 px-2 md:px-6">
 
             {/* LEFT IMAGE */}
+            <div className="w-full md:w-[60%] flex flex-col items-center gap-4 md:gap-6">
 
-            <div className="w-full md:w-[60%] flex flex-col items-center gap-6">
               <img
                 src={selected.files?.[0]}
-                className="w-full max-w-3xl rounded-2xl shadow-xl h-[80%]"
+                className="w-full max-w-2xl md:max-w-3xl rounded-2xl shadow-xl"
                 alt=""
               />
 
-              {/* View Gallery Button */}
+              {/* View Gallery */}
               {selected.has_subcontent && (
                 <button
-                  onClick={() => {
-                    setGalleryOpen(true);   // open gallery mode
-                  }}
-
-                  className="w-full max-w-3xl bg-white/30 backdrop-blur-lg text-white
-                            font-semibold text-xl py-4 rounded-xl shadow-lg border border-white/40"
+                  onClick={() => setGalleryOpen(true)}
+                  className="w-full max-w-2xl bg-white/30 backdrop-blur-lg text-white
+                              font-semibold text-lg md:text-xl py-3 md:py-4 
+                              rounded-xl shadow-lg border border-white/40"
                 >
                   View Gallery
                 </button>
               )}
+
             </div>
 
-
             {/* RIGHT TEXT */}
-            <div className="w-full md:w-[50%] text-lg md:text-xl leading-relaxed">
+            <div className="w-full md:w-[50%] text-base md:text-xl leading-relaxed">
 
-              {/* Show less = full text */}
               {showFullText ? (
                 <>
                   {selected.content}
@@ -1551,17 +1231,21 @@ function ScreenView() {
               )}
 
             </div>
+
           </div>
+          
 
           {/* QR CODE */}
           {selected.qr_code_url && (
-            <div className="absolute bottom-8 right-8 flex flex-col items-center">
+            <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 flex flex-col items-center">
               <img
                 src={selected.qr_code_url}
-                className="w-44 h-44 bg-white p-3 rounded-xl shadow-xl"
+                className="w-28 h-28 md:w-44 md:h-44 bg-white p-2 md:p-3 rounded-xl shadow-xl"
                 alt="QR"
               />
-              <span className="mt-2 text-white font-semibold">Learn More</span>
+              <span className="mt-2 text-white font-semibold text-sm md:text-base">
+                Learn More
+              </span>
             </div>
           )}
 
@@ -1570,13 +1254,17 @@ function ScreenView() {
     );
   };
 
+
   const renderGalleryView = () => {
-    const images = selected.sub_contents?.[0].gallery_images || [];
+    const mediaFiles = selected.sub_contents?.[0].gallery_images || [];
+
+    const isVideo = (url) => {
+      return url.match(/\.(mp4|mov|webm)$/i); // Detect video formats
+    };
 
     return (
-      <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[9999] flex flex-col items-center pt-10 px-4 text-white"
-      >
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[9999] flex flex-col items-center pt-10 px-4 text-white">
+
         {/* CARD CONTAINER */}
         <div
           className="
@@ -1603,7 +1291,7 @@ function ScreenView() {
             View Gallery
           </h1>
 
-          {/* SCROLLABLE IMAGE GRID (ONLY THIS AREA SCROLLS) */}
+          {/* SCROLLABLE GRID */}
           <div
             className="
               grid 
@@ -1615,14 +1303,30 @@ function ScreenView() {
               overflow-y-auto
               pr-3
             "
-            style={{ maxHeight: "65vh" }} // 👈 Fixed height area for scrolling
+            style={{ maxHeight: "65vh" }}
           >
-            {images.map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                className="w-full h-60 md:h-64 object-cover rounded-xl shadow-xl border border-white/20"
-              />
+            {mediaFiles.map((file, i) => (
+              <div key={i} className="w-full h-60 md:h-64 rounded-xl shadow-xl overflow-hidden border border-white/20">
+
+                {/* If video → render video */}
+                {isVideo(file) ? (
+                  <video
+                    controls
+                    className="w-full h-full object-cover rounded-xl"
+                  >
+                    <source src={file} type="video/mp4" />
+                    Your browser does not support video playback.
+                  </video>
+                ) : (
+                  /* Else show image */
+                  <img
+                    src={file}
+                    className="w-full h-full object-cover rounded-xl"
+                    alt=""
+                  />
+                )}
+
+              </div>
             ))}
           </div>
         </div>
@@ -1632,7 +1336,256 @@ function ScreenView() {
 
 
 
-  
+
+
+
+  const PresentationShowcaseView = () => {
+    const prev = () =>
+      setActiveIndex((prev) => (prev === 0 ? contents.length - 1 : prev - 1));
+
+    const next = () =>
+      setActiveIndex((prev) =>
+        prev === contents.length - 1 ? 0 : prev + 1
+      );
+
+    const getPosition = (index) => {
+      if (index === activeIndex) return "center";
+      if (index === activeIndex - 1) return "left";
+      if (index === activeIndex + 1) return "right";
+      return "hidden";
+    };
+
+    const active = contents[activeIndex];
+
+    return (
+      <div
+        className="relative flex flex-col items-center justify-center h-screen overflow-hidden"
+        style={{
+          backgroundImage: `url(${background})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* LOGO */}
+        <div
+          className="absolute top-4 cursor-pointer z-50"
+          onClick={() => navigate(`/container/${container}`)}
+        >
+          <img
+            src={containerLogo}
+            alt="logo"
+            className="h-20 sm:h-24 md:h-40 lg:h-48 w-auto object-contain"
+          />
+        </div>
+
+        {/* === RESPONSIVE SLIDER === */}
+        <div className="relative w-full h-[60%] sm:h-[65%] md:h-[70%] flex items-center justify-center">
+          {contents.map((c, index) => {
+            const pos = getPosition(index);
+
+            // RESPONSIVE SLIDE BASE STYLE
+            let style = {
+              position: "absolute",
+              width: "80vw",
+              maxWidth: "600px",
+              height: "45vh",
+              maxHeight: "380px",
+              borderRadius: "12px",
+              overflow: "hidden",
+              transition: "all 0.6s ease",
+              opacity: 0.4,
+              zIndex: 10,
+              filter: "grayscale(40%)",
+            };
+
+            // RESPONSIVE OFFSETS
+            const mobileOffset = "42vw";
+            const desktopOffset = "350px";
+
+            // Choose offset depending on screen width
+            const offset = window.innerWidth < 768 ? mobileOffset : desktopOffset;
+
+            if (pos === "center") {
+              style.transform = "scale(1)";
+              style.opacity = 1;
+              style.zIndex = 40;
+              style.filter = "grayscale(0%)";
+            } else if (pos === "left") {
+              style.transform = `translateX(-${offset}) scale(0.85)`;
+              style.opacity = 0.5;
+              style.zIndex = 20;
+            } else if (pos === "right") {
+              style.transform = `translateX(${offset}) scale(0.85)`;
+              style.opacity = 0.5;
+              style.zIndex = 20;
+            }
+
+            const handleClick = () => {
+              if (pos === "left") prev();
+              else if (pos === "right") next();
+              else if (pos === "center") {
+                setSelected(c);
+                if (c.has_subcontent) setMode("slider-thumb");
+              }
+            };
+
+            return (
+              <motion.div key={index} style={style} onClick={handleClick}>
+                {/* IMAGE FULLY VISIBLE – NO CROP */}
+                {c.files?.[0] ? (
+                  <img
+                    src={c.files[0]}
+                    className="w-full h-full object-contain bg-black/20"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full bg-black/50 text-white">
+                    No Image
+                  </div>
+                )}
+
+                {/* TITLE OVERLAY (Center only) */}
+                {pos === "center" && (
+                  <div className="absolute bottom-3 w-full text-center">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-xl">
+                      {c.title}
+                    </h2>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+
+      </div>
+    );
+  };
+
+
+  const SliderThumbnailGalleryView = () => {
+    if (!selected) return null;
+
+    const images = [
+      selected.sub_contents?.[0]?.main_image,
+      ...(selected.sub_contents?.[0]?.gallery_images || [])
+    ];
+
+    const [activeIndex, setActiveIndex] = useState(0);
+    const backgroundImage = images[activeIndex];
+
+    return (
+      <div
+        className="relative w-full min-h-screen flex flex-col"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* DARK OVERLAY */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+        {/* ===== TOP RIGHT LOGO ===== */}
+        <div
+          className="absolute top-4 right-4 cursor-pointer z-[9999]"
+          onClick={() => setMode("slider-thumbnail-view")}
+        >
+          <img
+            src={containerLogo}
+            alt="logo"
+            className="h-20 md:h-40 w-auto object-contain"
+          />
+        </div>
+
+        {/* ===== GRID AREA (Image Left + Text Right) ===== */}
+        <div
+          className="
+            relative z-20
+            flex-grow grid grid-cols-1 md:grid-cols-2
+            gap-6 md:gap-10
+            px-4 md:px-12
+            pt-20 md:pt-28
+          "
+        >
+
+          {/* === LEFT FULL IMAGE === */}
+          <div
+            className="
+              w-full h-[40vh] md:h-[65vh]
+              rounded-xl shadow-2xl
+              border border-white/10
+            "
+            style={{
+              backgroundImage: `url(${images[activeIndex]})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          ></div>
+
+          {/* === RIGHT CONTENT === */}
+          <div className="flex flex-col justify-start items-start">
+            <div
+              className="
+                bg-black/35 backdrop-blur-sm
+                p-5 md:p-10 lg:p-16
+                rounded-xl shadow-xl
+                w-full max-w-4xl
+              "
+            >
+              <h1 className="text-2xl md:text-4xl font-bold mb-4 text-white">
+                {selected.title}
+              </h1>
+
+              <p className="text-white text-lg md:text-2xl leading-relaxed whitespace-pre-line">
+                {selected.sub_contents?.[0]?.description}
+              </p>
+            </div>
+          </div>
+
+          {/* === QR CODE (bottom-right) === */}
+          {selected.qr_code_url && (
+            <div className="absolute bottom-5 right-5 flex flex-col items-center z-30">
+              <img
+                src={selected.qr_code_url}
+                className="w-24 h-24 md:w-40 md:h-40 bg-white p-2 rounded-xl shadow-xl"
+                alt="QR Code"
+              />
+              <span className="text-white mt-2 font-semibold">Learn More</span>
+            </div>
+          )}
+        </div>
+
+        {/* === THUMBNAIL STRIP === */}
+        <div
+          className="
+            relative z-30
+            w-full p-3 md:p-4
+            bg-black/50 backdrop-blur-md
+            flex gap-3 md:gap-4
+            overflow-x-auto
+            border-t border-white/20
+          "
+        >
+          {images.map((img, i) => (
+            <img
+              key={i}
+              src={img}
+              onClick={() => setActiveIndex(i)}
+              className={`
+                h-20 w-24 md:h-28 md:w-32 object-cover rounded-lg cursor-pointer
+                border-2 md:border-4 transition-all duration-300
+                ${
+                  activeIndex === i
+                    ? "border-yellow-400 scale-110 opacity-100"
+                    : "border-transparent opacity-60 hover:opacity-100"
+                }
+              `}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
 
   /* ----------------------------------------------------------------------------------------
      🔥 FINAL OUTPUT (SELECT DISPLAY MODE)
@@ -1651,6 +1604,10 @@ function ScreenView() {
 
       {mode === "diagonal-split-view" && <DiagonalHomeView />}
       {mode === "detail" && <DetailView />}
+
+      {mode === "slider-thumbnail-view"  && <PresentationShowcaseView />}
+      {mode === 'slider-thumb' && <SliderThumbnailGalleryView /> }
+
       {galleryOpen && renderGalleryView()}
 
     </>
