@@ -432,6 +432,7 @@
 // export default Contents;
 import React, { useState, useEffect } from "react";
 import Api from "../../Api/Api";
+import RichTextEditor from "../Components/RichTextEditor.jsx";
 
 function Contents() {
   const [screens, setScreens] = useState([]);
@@ -446,7 +447,14 @@ function Contents() {
   const [editPosition, setEditPosition] = useState("Center");
   const [editHyperlink, setEditHyperlink] = useState("");
   const [editTransition, setEditTransition] = useState("fade");
+  const [dob, setDob] = useState("");
+  const [background , setBackground] = useState()
+
+  const [editModeType, setEditModeType] = useState("overview");
+
   const [logo, setLogo] = useState(null);
+
+  const [file, setFile] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
@@ -458,6 +466,9 @@ function Contents() {
 
   const currentContents = contents.slice(indexOfFirst, indexOfLast);
 
+
+  const [editMode, setEditMode] = useState("normal-view");
+
   const handleNext = () => {
     if (currentPage < totalPages) setCurrentPage((p) => p + 1);
   };
@@ -465,8 +476,6 @@ function Contents() {
   const handlePrev = () => {
     if (currentPage > 1) setCurrentPage((p) => p - 1);
   };
-
-
 
 
   useEffect(() => {
@@ -577,12 +586,18 @@ function Contents() {
   }
 
   function openEditPopup(content) {
+    console.log("------------000000000000-----",content)
     setSelectedContent(content);
     setEditTitle(content.title);
     setEditContent(content.content);
     setEditPosition(content.position || "Center");
     setEditHyperlink(content.hyperlink || "");
     setEditTransition(content.transition_effect || "fade");
+    setEditMode(content.display_mode ||  "normal-view" );
+    setEditModeType(content.view_mode || "overview")
+    setDob(content.dob)
+    setFile([]);
+
     setShowEditPopup(true);
   }
 
@@ -595,10 +610,22 @@ function Contents() {
       form.append("position", editPosition);
       form.append("hyperlink", editHyperlink);
       form.append("transition_effect", editTransition);
+      form.append("dob", dob);
+
 
       if (logo && logo.length > 0) {
         Array.from(logo).forEach((lg) => form.append("logo", lg));
       }
+
+      // Attach new files only
+      if (file && file.length > 0) {
+        Array.from(file).forEach((f) => form.append("files", f));
+      }
+
+      if (background && background.length > 0) {
+        Array.from(background).forEach((lg) => form.append("background", lg));
+      }
+
 
       const res = await fetch(`${Api}/api/v1/contents/${selectedContent.id}`, {
         method: "PUT",
@@ -615,6 +642,54 @@ function Contents() {
       alert("❌ Update failed.");
     }
   }
+
+  
+
+  const FIELD_CONFIG = {
+    "normal-view": ["title", "content", "contentType", "position", "hyperlink", "transition", "logo", "files"],
+    
+    "thumbnail-gallery": ["title", "files"],
+    
+    "slide-view": ["title", "content", "files","background contant" , "hyperlink"],
+    
+    "diagonal-split-view": [
+      "title",
+      "content",
+      "hyperlink",
+      "logo",
+      "files",
+      "background contant"
+    ],
+
+    "card-carousel": ["title", "content", "files", "hyperlink","background contant"],
+    
+    "slider-thumbnail-view": ["title", "files", "background contant" , "hyperlink" , "dob", "logo"],
+
+    "article-view": ["title", "content", "hyperlink" ],
+
+    "weapons-view": ["title", "content", "files", "hyperlink"],
+
+    "TriBranchShowcaseView": ["title", "content", "files"],
+    "gallary-detail-view": ["title", "content", "files","background contant" , "hyperlink"], 
+    
+  };
+
+  const FIELD_CONFIGS = {
+    "overview": ["title", "content"],
+    
+    "history": ["title", "content" , "hyperlink"],
+    
+    "visual-reels": ["title" ],
+
+    "uniforms": ["title"],
+  
+  };
+
+
+  const shouldShows = (field) => FIELD_CONFIGS[editModeType]?.includes(field);
+
+
+  const shouldShow = (field) => FIELD_CONFIG[editMode]?.includes(field);
 
   return (
     <div className="p-6">
@@ -731,7 +806,7 @@ function Contents() {
       </section>
 
       {/* 🟡 Edit Popup Modal */}
-      {showEditPopup && (
+      {false && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-2xl shadow-lg w-[90%] max-w-lg relative">
             <h3 className="text-xl font-semibold mb-4 text-gray-700">
@@ -745,76 +820,198 @@ function Contents() {
               ✕
             </button>
 
+            <div className="mb-4">
+              <label className="block font-medium mb-1">Select View Type</label>
+              <select
+                value={editMode}
+                onChange={(e) => setEditMode(e.target.value)}
+                className="border rounded-lg px-4 py-2 w-full"
+              >
+                <option value="thumbnail-gallery">Thumbnail Gallery</option>
+                <option value="slide-view">Slide View</option>
+                <option value="diagonal-split-view">Diagonal Split View</option>
+                <option value="card-carousel">Card Carousel</option>
+                <option value="slider-thumbnail-view">Slide With Thumbnail View</option>
+                <option value="article-view">Article View</option>
+                <option value="weapons-view">Weapons View</option>
+                <option value="TriBranchShowcaseView">Tribranch Showcase View</option>
+                <option value="gallary-detail-view">GallaryDetailView</option>
+                <option value="asf">Know Your APF</option>
+              </select>
+            </div>
+
             <form onSubmit={updateContent} className="space-y-4">
-              <div>
-                <label className="block font-medium mb-1">Title</label>
-                <input
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2"
-                />
-              </div>
 
-              <div>
-                <label className="block font-medium mb-1">Content</label>
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2 h-24"
-                />
-              </div>
+              {shouldShow("title") && (
+                <div>
+                  <label className="block font-medium mb-1">Title</label>
+                  <input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
+                </div>
+              )}
 
-              <div>
-                <label className="block font-medium mb-1">Position</label>
-                <select
-                  value={editPosition}
-                  onChange={(e) => setEditPosition(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2"
-                >
-                  <option value="Top-Left">Top-Left</option>
-                  <option value="Top-Right">Top-Right</option>
-                  <option value="Bottom-Left">Bottom-Left</option>
-                  <option value="Bottom-Right">Bottom-Right</option>
-                  <option value="Center">Center</option>
-                </select>
-              </div>
+              {editMode === "asf" && shouldShows("title") && (
+                <div>
+                  <label className="block font-medium mb-1">Title</label>
+                  <input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
+                </div>
+              )}
 
-              <div>
-                <label className="block font-medium mb-1">Hyperlink</label>
-                <input
-                  type="url"
-                  value={editHyperlink}
-                  onChange={(e) => setEditHyperlink(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2"
-                />
-              </div>
 
-              <div>
-                <label className="block font-medium mb-1">
-                  Upload Logo
-                </label>
-                
-                <input
-                  type="file"
-                  onChange={(e) => setLogo(e.target.files)}
-                  className="w-full border border-dashed px-4 py-3 rounded-lg"
-                />
-              </div>
 
-              <div>
-                <label className="block font-medium mb-1">Transition Effect</label>
-                <select
-                  value={editTransition}
-                  onChange={(e) => setEditTransition(e.target.value)}
-                  className="w-full border rounded-lg px-3 py-2"
-                >
-                  <option value="fade">Fade</option>
-                  <option value="zoom">Zoom</option>
-                  <option value="slide-left">Slide Left</option>
-                  <option value="slide-right">Slide Right</option>
-                  <option value="slide-up">Slide Up</option>
-                </select>
-              </div>
+              {/* {shouldShow("content") && (
+                <div>
+                  <label className="block font-medium mb-1">Content</label>
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2 h-24"
+                  />
+                </div>
+              )} */}
+
+              {shouldShow("content") && (
+                <div>
+                  <label className="block font-medium mb-1">Content</label>
+    
+                  <RichTextEditor content={editContent} setContent={setEditContent} />
+                </div>
+              )}
+
+              {editMode === "asf" && shouldShows("content") && (
+                <div>
+                  <label className="block font-medium mb-1">Over View Content</label>
+
+                  {/* <RichTextEditor content={content} setContent={setContent} /> */}
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full border rounded-lg px-4 py-2 h-32"
+                  />
+                </div>
+
+              )}
+
+
+             
+
+              {shouldShow("position") && (
+                <div>
+                  <label className="block font-medium mb-1">Position</label>
+                  <select
+                    value={editPosition}
+                    onChange={(e) => setEditPosition(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2"
+                  >
+                    <option value="Top-Left">Top-Left</option>
+                    <option value="Top-Right">Top-Right</option>
+                    <option value="Bottom-Left">Bottom-Left</option>
+                    <option value="Bottom-Right">Bottom-Right</option>
+                    <option value="Center">Center</option>
+                  </select>
+                </div>
+              )}
+
+              {shouldShow("hyperlink") && (
+                <div>
+                  <label className="block font-medium mb-1">Hyperlink</label>
+                  <input
+                    type="url"setFile
+                    value={editHyperlink}
+                    onChange={(e) => setEditHyperlink(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
+                </div>
+              )}
+
+              {editMode === "asf" && shouldShows("hyperlink") && (
+                <div>
+                  <label className="block font-medium mb-1">Hyperlink</label>
+                  <input
+                    type="url"setFile
+                    value={editHyperlink}
+                    onChange={(e) => setEditHyperlink(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2"
+                  />
+                </div>
+              )}
+
+              {shouldShow("files") && (
+                <div>
+                  <label className="block font-medium mb-1">Upload Files</label>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={(e) => setFile(e.target.files)}
+                    className="w-full border border-dashed px-4 py-3 rounded-lg"
+                  />
+                  {/* {errors.file && <p className="text-red-500 text-sm">{errors.file}</p>} */}
+                </div>
+              )}
+
+              {shouldShow("logo") && (
+                <div>
+                  <label className="block font-medium mb-1">
+                    Upload Logo
+                  </label>
+                  
+                  <input
+                    type="file"
+                    onChange={(e) => setLogo(e.target.files)}
+                    className="w-full border border-dashed px-4 py-3 rounded-lg"
+                  />
+                </div>
+              )}
+
+              {shouldShow("transition") && (
+                <div>
+                  <label className="block font-medium mb-1">Transition Effect</label>
+                  <select
+                    value={editTransition}
+                    onChange={(e) => setEditTransition(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2"
+                  >
+                    <option value="fade">Fade</option>
+                    <option value="zoom">Zoom</option>
+                    <option value="slide-left">Slide Left</option>
+                    <option value="slide-right">Slide Right</option>
+                    <option value="slide-up">Slide Up</option>
+                  </select>
+                </div>
+              )}
+
+
+
+              {shouldShow("background contant") && (
+                <div>
+                  <label className="block font-medium mb-1">Upload Background</label>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={(e) => setBackground(e.target.files)}
+                    className="w-full border border-dashed px-4 py-3 rounded-lg"
+                  />
+                </div>
+              )}
+
+              {shouldShow("dob") && (
+                <div>
+                  <label className="block font-medium mb-1">Period</label>
+                  <input
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    className="w-full border rounded-lg px-4 py-2"
+                  />
+                </div>
+              )}
+
 
               <button
                 type="submit"
@@ -826,6 +1023,188 @@ function Contents() {
           </div>
         </div>
       )}
+
+      {showEditPopup && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">
+          
+          <div className="bg-white w-[95%] max-w-3xl rounded-2xl shadow-2xl relative p-6">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setShowEditPopup(false)}
+              className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-xl"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-2xl font-semibold mb-5 text-gray-800">
+              Edit Content
+            </h3>
+
+            {/* Scroll Container */}
+            <div className="max-h-[75vh] overflow-y-auto pr-3 space-y-5">
+
+              {/* VIEW TYPE */}
+              <div>
+                <label className="block font-medium mb-1 text-gray-700">Select View Type</label>
+                <select
+                  value={editMode}
+                  onChange={(e) => setEditMode(e.target.value)}
+                  className="border rounded-lg px-4 py-2 w-full"
+                >
+                  <option value="thumbnail-gallery">Thumbnail Gallery</option>
+                  <option value="slide-view">Slide View</option>
+                  <option value="diagonal-split-view">Diagonal Split View</option>
+                  <option value="card-carousel">Card Carousel</option>
+                  <option value="slider-thumbnail-view">Slide With Thumbnail View</option>
+                  <option value="article-view">Article View</option>
+                  <option value="weapons-view">Weapons View</option>
+                  <option value="TriBranchShowcaseView">Tribranch Showcase View</option>
+                  <option value="gallary-detail-view">GallaryDetailView</option>
+                  <option value="asf">Know Your APF</option>
+                </select>
+              </div>
+
+              <form onSubmit={updateContent} className="space-y-4">
+
+                {/* TITLE */}
+                {shouldShow("title") && (
+                  <div>
+                    <label className="block font-medium mb-1">Title</label>
+                    <input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="w-full border rounded-lg px-4 py-2"
+                    />
+                  </div>
+                )}
+
+                {/* ASF Title */}
+                {editMode === "asf" && shouldShows("title") && (
+                  <div>
+                    <label className="block font-medium mb-1">Title</label>
+                    <input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="w-full border rounded-lg px-4 py-2"
+                    />
+                  </div>
+                )}
+
+                {/* CONTENT */}
+                {shouldShow("content") && (
+                  <div>
+                    <label className="block font-medium mb-1">Content</label>
+                    <RichTextEditor content={editContent} setContent={setEditContent} />
+                  </div>
+                )}
+
+                {/* OVERVIEW CONTENT FOR ASF */}
+                {editMode === "asf" && shouldShows("content") && (
+                  <div>
+                    <label className="block font-medium mb-1">Over View Content</label>
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="w-full border rounded-lg px-4 py-2 h-32"
+                    ></textarea>
+                  </div>
+                )}
+
+                {/* POSITION */}
+                {shouldShow("position") && (
+                  <div>
+                    <label className="block font-medium mb-1">Position</label>
+                    <select
+                      value={editPosition}
+                      onChange={(e) => setEditPosition(e.target.value)}
+                      className="w-full border rounded-lg px-3 py-2"
+                    >
+                      <option value="Top-Left">Top-Left</option>
+                      <option value="Top-Right">Top-Right</option>
+                      <option value="Bottom-Left">Bottom-Left</option>
+                      <option value="Bottom-Right">Bottom-Right</option>
+                      <option value="Center">Center</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* HYPERLINK */}
+                {shouldShow("hyperlink") && (
+                  <div>
+                    <label className="block font-medium mb-1">Hyperlink</label>
+                    <input
+                      type="url"
+                      value={editHyperlink}
+                      onChange={(e) => setEditHyperlink(e.target.value)}
+                      className="w-full border rounded-lg px-3 py-2"
+                    />
+                  </div>
+                )}
+
+                {/* FILE UPLOAD */}
+                {shouldShow("files") && (
+                  <div>
+                    <label className="block font-medium mb-1">Upload Files</label>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(e) => setFile(e.target.files)}
+                      className="w-full border border-dashed px-4 py-3 rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* LOGO */}
+                {shouldShow("logo") && (
+                  <div>
+                    <label className="block font-medium mb-1">Upload Logo</label>
+                    <input
+                      type="file"
+                      onChange={(e) => setLogo(e.target.files)}
+                      className="w-full border border-dashed px-4 py-3 rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* BACKGROUND */}
+                {shouldShow("background contant") && (
+                  <div>
+                    <label className="block font-medium mb-1">Upload Background</label>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(e) => setBackground(e.target.files)}
+                      className="w-full border border-dashed px-4 py-3 rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* DOB */}
+                {shouldShow("dob") && (
+                  <div>
+                    <label className="block font-medium mb-1">Period</label>
+                    <input
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
+                      className="w-full border rounded-lg px-4 py-2"
+                    />
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg w-full mt-4"
+                >
+                  Update
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 }

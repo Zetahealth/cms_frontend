@@ -34,6 +34,8 @@ import PrivateRoute from "./pages/PrivateRoute";
 import AdminLayout from "././pages/Admin/AdminLayout"
 import ContainerView from "./pages/ContainerView";
 
+import MoreOptionsView from "./pages/MoreOptionsView"
+
 function App() {
   const token = sessionStorage.getItem("authToken");
   const role = sessionStorage.getItem("role");
@@ -116,6 +118,13 @@ function App() {
             <PrivateRoute role="admin">
               <Admin />
             </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/container/:slug/more"
+          element={
+            <MoreOptionsView />
           }
         />
 

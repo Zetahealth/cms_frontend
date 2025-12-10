@@ -35,6 +35,33 @@
 }
 
 
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror li {
+  margin-bottom: 0.25rem;
+}
+
+.user-content ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+
+.user-content ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+
+
+
+
 /* Add in your CSS / global stylesheet */
 @keyframes logoEnter {
   0% {

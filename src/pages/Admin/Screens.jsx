@@ -110,7 +110,7 @@ function Screens() {
         let validation = {};
 
         if (!editName.trim()) validation.name = "Screen name is required";
-        if (!editTitle.trim()) validation.title = "Screen title is required";
+        // if (!editTitle.trim()) validation.title = "Screen title is required";
         if (!editMode) validation.mode = "Select a display mode";
 
         if (editCardImage && editCardImage.size > 100 * 1024 * 1024) {
@@ -198,9 +198,9 @@ function Screens() {
         }
 
         // Title validation
-        if (!screenTitle.trim()) {
-            validationErrors.screenTitle = "Screen title is required";
-        }
+        // if (!screenTitle.trim()) {
+        //     validationErrors.screenTitle = "Screen title is required";
+        // }
 
         // Display mode validation
         if (!displayMode) {
@@ -403,9 +403,9 @@ function Screens() {
                 placeholder="Enter screen title"
                 className="border rounded-lg px-4 py-2 w-full"
             />
-            {errors.screenTitle && (
+            {/* {errors.screenTitle && (
                 <p className="text-red-500 text-sm mt-1">{errors.screenTitle}</p>
-            )}
+            )} */}
             </div>
 
             {/* Display Mode */}
@@ -423,6 +423,13 @@ function Screens() {
                 <option value="diagonal-split-view">Diagonal Split View</option>
                 <option value="card-carousel">Card Carousel</option>
                 <option value="slider-thumbnail-view">Slide With Thumbnail View</option>
+                <option value="article-view">Article View</option>
+                <option value="weapons-view">Weapons View</option>
+                <option value="TriBranchShowcaseView">Tribranch Showcase View (ARTILLERIES)</option>
+                <option value="gallary-detail-view">Gallary Detail View</option>
+                <option value="asf">Know Your APF</option>
+                <option value="elite-groups">Elite Groups</option>
+ 
             </select>
             {errors.displayMode && (
                 <p className="text-red-500 text-sm mt-1">{errors.displayMode}</p>
@@ -613,7 +620,7 @@ function Screens() {
                     onChange={(e) => setEditTitle(e.target.value)}
                     className="border rounded-lg px-4 py-2 w-full"
                 />
-                {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+                {/* {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>} */}
                 </div>
 
                 {/* Display Mode */}
@@ -630,6 +637,13 @@ function Screens() {
                     <option value="diagonal-split-view">Diagonal Split View</option>
                     <option value="card-carousel">Card Carousel</option>
                     <option value="slider-thumbnail-view">Slide With Thumbnail View</option>
+                    <option value="article-view">Article View</option>
+                    <option value="weapons-view">Weapons View</option>
+                    <option value="TriBranchShowcaseView">Tribranch Showcase View (ARTILLERIES)</option>
+                    <option value="gallary-detail-view">Gallary Detail View</option>
+                    <option value="asf">Know Your APF</option>
+                    
+                    
 
                 </select>
                 {errors.mode && (

@@ -9,6 +9,9 @@ function ScreenContainers() {
   const [transitionEffect, setTransitionEffect] = useState("fade");
   const [contentFiles, setContentFiles] = useState(null);
   const [backgroundFile, setBackgroundFile] = useState(null);
+  const [subbackgroundFile, setSubBackgroundFile] = useState(null);
+  
+
   const [loading, setLoading] = useState(false);
   const [displayMode, setDisplayMode] = useState("slide-view");
 
@@ -62,6 +65,7 @@ function ScreenContainers() {
 
 
 
+
   const validateForm = () => {
     let e = {};
 
@@ -90,16 +94,13 @@ function ScreenContainers() {
     if (backgroundFile && backgroundFile.size > 100 * 1024 * 1024) {
       e.background = "Background file must be under 100MB";
     }
-    if (
-      backgroundFile &&
-      !(
-        backgroundFile.type.startsWith("image/") ||
-        backgroundFile.type.startsWith("video/")
-      )
-    ) {
-      e.background = "Background must be an image or video";
+
+
+    if (subbackgroundFile && subbackgroundFile.size > 100 * 1024 * 1024) {
+      e.subbackgroundFile = "Background file must be under 100MB";
     }
 
+    
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -158,6 +159,11 @@ function ScreenContainers() {
       if (backgroundFile) {
         formData.append("background", backgroundFile);
       }
+      if (subbackgroundFile) {
+        formData.append("subbackground", subbackgroundFile);
+      }
+
+      
 
       const res = await fetch(`${Api}/api/v1/screen_containers`, {
         method: "POST",
@@ -174,6 +180,7 @@ function ScreenContainers() {
       setContainerName("");
       setContentFiles(null);
       setBackgroundFile(null);
+      setSubBackgroundFile(null);
     } catch (err) {
       alert("Error creating container");
       console.error(err);
@@ -227,6 +234,36 @@ function ScreenContainers() {
     );
     fetchContainers();
   }
+
+
+//  subsceens assign screens
+
+
+
+  async function assignSubScreenToContainer(containerId, screenId) {
+    await fetch(`${Api}/api/v1/screen_containers/${containerId}/assign_sub_screen`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ screen_id: screenId }),
+    });
+    fetchContainers();
+  }
+
+  async function unassignSubScreenFromContainer(containerId, screenId) {
+    await fetch(
+      `${Api}/api/v1/screen_containers/${containerId}/unassign_sub_screen?screen_id=${screenId}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    fetchContainers();
+  }
+
+
 
   // 🖼️ Preview helper
   const renderFilePreview = (fileList) => {
@@ -284,9 +321,15 @@ function ScreenContainers() {
 
   const [editCardImage, setEditCardImage] = useState(null);
   const [editBackground, setEditBackground] = useState(null);
+  const [subeditBackground, setSubEditBackground] = useState(null);
+
 
   const [existingCardImage, setExistingCardImage] = useState(null);
   const [existingBackground, setExistingBackground] = useState(null);
+  const [subexistingBackground, setSubExistingBackground] = useState(null);
+
+  const [openAccordion, setOpenAccordion] = useState(null);
+
 
   function openEdit(c) {
     setEditingContainer(c);
@@ -296,6 +339,7 @@ function ScreenContainers() {
     // existing images
     setExistingCardImage(c.files?.[0] || null);
     setExistingBackground(c.background_url || null);
+    setSubExistingBackground(c.subbackground_url || null)
 
     setEditPopup(true);
   }
@@ -315,6 +359,9 @@ function ScreenContainers() {
     // only add new background file
     if (editBackground) {
       formData.append("background", editBackground);
+    }
+    if(subeditBackground){
+      formData.append("subbackground", subeditBackground);
     }
 
     const res = await fetch(`${Api}/api/v1/screen_containers/${editingContainer.id}`, {
@@ -366,7 +413,7 @@ function ScreenContainers() {
       )}
 
       <div className="p-6">
-        {/* --- Create Container Section --- */}
+      
         <section className="bg-white shadow-md rounded-2xl p-6 mb-10">
           <h3 className="text-2xl font-semibold mb-4 text-gray-700">
             Create New Container
@@ -402,7 +449,7 @@ function ScreenContainers() {
 
             {/* Card Files */}
             <div>
-              <label className="block font-medium">Upload Card Images</label>
+              <label className="block font-medium">Upload Logo</label>
               <input
                 type="file"
                 multiple
@@ -425,6 +472,19 @@ function ScreenContainers() {
               )}
             </div>
 
+            <div>
+              <label className="block font-medium">Upload Background For SubScreens</label>
+              <input
+                type="file"
+                onChange={(e) => setSubBackgroundFile(e.target.files[0])}
+                className="w-full border border-dashed px-4 py-3 rounded-lg"
+              />
+              {errors.subbackgroundFile && (
+                <p className="text-red-500 text-sm">{errors.subbackgroundFile}</p>
+              )}
+            </div>
+
+
             {/* Submit */}
             <button className="bg-green-600 text-white px-6 py-2 rounded-lg">
               Create Container
@@ -432,8 +492,7 @@ function ScreenContainers() {
           </form>
         </section>
 
-        {/* --- List of Containers --- */}
-        <section className="bg-white shadow-md rounded-2xl p-6">
+        {/* <section className="bg-white shadow-md rounded-2xl p-6">
           <h3 className="text-xl font-semibold mb-4 text-gray-700">
             Existing Containers
           </h3>
@@ -443,13 +502,13 @@ function ScreenContainers() {
               key={container.id}
               className="border rounded-lg p-4 mb-4 shadow-sm"
             >
-              {/* Header */}
+         
               <div className="flex items-center justify-between mb-3">
                 
-                {/* Name */}
+            
                 <h4 className="text-lg font-semibold">{container.name}</h4>
 
-                {/* Action Buttons */}
+                
                 <div className="flex items-center gap-4">
                   <a
                     href={`/container/${container.id}`}
@@ -479,7 +538,7 @@ function ScreenContainers() {
 
               </div>
 
-              {/* Assign / Unassign */}
+             
               <div className="flex flex-wrap gap-2 mb-3">
                 {screens.map((s) => {
                   const assigned = container.screens?.some(
@@ -506,17 +565,45 @@ function ScreenContainers() {
                 })}
               </div>
 
-              {/* Assigned Screens */}
+              
               <p className="text-sm text-gray-600">
                 Assigned:{" "}
                 {container.screens?.length
                   ? container.screens.map((sc) => sc.name).join(", ")
                   : "None"}
               </p>
+              <h3 className="text-lg font-semibold">More Screens :</h3>
+
+              <div className="flex flex-wrap gap-2 mb-3">
+                {screens.map((s) => {
+                  const assigned = container.subscreens?.some(
+                    (sc) => sc.id === s.id
+                  );
+
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() =>
+                        assigned
+                          ? unassignSubScreenFromContainer(container.id, s.id)
+                          : assignSubScreenToContainer(container.id, s.id)
+                      }
+                      className={`px-4 py-2 rounded-lg text-white ${
+                        assigned
+                          ? "bg-red-500 hover:bg-red-600"
+                          : "bg-blue-500 hover:bg-blue-600"
+                      }`}
+                    >
+                      {s.name}
+                    </button>
+                  );
+                })}
+              </div>
+
 
             </div>
           ))}
-          {/* Pagination */}
+         
           <div className="flex justify-center gap-4 mt-6">
             <button
               onClick={handlePrev}
@@ -536,9 +623,177 @@ function ScreenContainers() {
               Next
             </button>
           </div>
+        </section> */}
+
+      
+        <section className="bg-white shadow-md rounded-2xl p-6">
+          <h3 className="text-xl font-semibold mb-4 text-gray-700">
+            Existing Containers
+          </h3>
+
+          <div className="space-y-4">
+            {currentContainers.map((container) => {
+              const isOpen = openAccordion === container.id; // your accordion state
+
+              return (
+                <div
+                  key={container.id}
+                  className="border rounded-xl shadow-sm overflow-hidden"
+                >
+                  {/* Accordion Header */}
+                  <div
+                    className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer"
+                    onClick={() =>
+                      setOpenAccordion(isOpen ? null : container.id)
+                    }
+                  >
+                    <h4 className="text-lg font-semibold text-gray-800">
+                      {container.name}
+                    </h4>
+
+                    <span className="text-xl">
+                      {isOpen ? "▲" : "▼"}
+                    </span>
+                  </div>
+
+                  {/* Accordion Body */}
+                  {isOpen && (
+                    <div className="p-4 space-y-4 bg-white">
+
+                      {/* ACTION BUTTONS */}
+                      <div className="flex flex-wrap items-center gap-4">
+                        <a
+                          href={`/container/${container.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-4 py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200"
+                        >
+                          Open
+                        </a>
+
+                        <button
+                          onClick={() => openEdit(container)}
+                          className="px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 font-semibold hover:bg-yellow-200"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => deleteContainer(container.id)}
+                          className="px-4 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200"
+                        >
+                          Delete
+                        </button>
+                      </div>
+
+                      {/* ASSIGN SCREENS */}
+                      <div>
+                        <p className="text-gray-700 font-medium mb-2">
+                          Assign / Unassign Screens:
+                        </p>
+
+                        <div className="flex flex-wrap gap-2">
+                          {screens.map((s) => {
+                            const assigned = container.screens?.some(
+                              (sc) => sc.id === s.id
+                            );
+
+                            return (
+                              <button
+                                key={s.id}
+                                onClick={() =>
+                                  assigned
+                                    ? unassignScreenFromContainer(container.id, s.id)
+                                    : assignScreenToContainer(container.id, s.id)
+                                }
+                                className={`px-4 py-2 rounded-lg text-white transition ${
+                                  assigned
+                                    ? "bg-red-500 hover:bg-red-600"
+                                    : "bg-blue-500 hover:bg-blue-600"
+                                }`}
+                              >
+                                {s.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* ASSIGNED LIST */}
+                      <p className="text-sm text-gray-600">
+                        <strong>Assigned:</strong>{" "}
+                        {container.screens?.length
+                          ? container.screens.map((sc) => sc.name).join(" ,   ")
+                          : "None"}
+                      </p>
+
+          
+                      <p className="text-gray-700 font-medium mt-4">
+                        More Screens (Subscreens):
+                      </p>
+                       {/* <button
+                          // onClick={() => deleteContainer(container.id)}
+                          className="px-4 py-2 rounded-lg bg-green-100 text-green-700 font-semibold hover:bg-green-200"
+                        >
+                          Upload Backgroud 
+                        </button> */}
+
+                      <div className="flex flex-wrap gap-2">
+                        {screens.map((s) => {
+                          const assigned = container.subscreens?.some(
+                            (sc) => sc.id === s.id
+                          );
+
+                          return (
+                            <button
+                              key={s.id}
+                              onClick={() =>
+                                assigned
+                                  ? unassignSubScreenFromContainer(container.id, s.id)
+                                  : assignSubScreenToContainer(container.id, s.id)
+                              }
+                              className={`px-4 py-2 rounded-lg text-white transition ${
+                                assigned
+                                  ? "bg-red-500 hover:bg-red-600"
+                                  : "bg-blue-500 hover:bg-blue-600"
+                              }`}
+                            >
+                              {s.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* PAGINATION */}
+          <div className="flex justify-center items-center gap-4 mt-6">
+            <button
+              onClick={handlePrev}
+              className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+            >
+              Previous
+            </button>
+
+            <span className="font-bold text-gray-700">
+              Page {currentPage} / {totalPages}
+            </span>
+
+            <button
+              onClick={handleNext}
+              className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+            >
+              Next
+            </button>
+          </div>
         </section>
 
-        {editPopup && editingContainer && (
+
+        {false && false && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl p-6 shadow-lg w-[450px] relative">
               <h3 className="text-xl font-bold mb-4">
@@ -579,7 +834,7 @@ function ScreenContainers() {
 
                 {/* Card Image */}
                 <div>
-                  <label className="block font-medium mb-1">Replace Card Image</label>
+                  <label className="block font-medium mb-1">Replace Logo Image</label>
                   <input
                     type="file"
                     accept="image/*,video/*, gif/*"
@@ -644,6 +899,48 @@ function ScreenContainers() {
                   )}
                 </div>
 
+
+
+
+                <div>
+                  <label className="block font-medium mb-1">Replace Subscreens Background</label>
+                  <input
+                    type="file"
+                    accept="image/*,video/*, gif/*"
+                    onChange={(e) => setSubEditBackground(e.target.files[0])}
+                    className="w-full border border-dashed px-4 py-3 rounded-lg"
+                  />
+
+                  {subexistingBackground && !subeditBackground && (
+                    <div className="mt-2">
+                      <img
+                        src={subexistingBackground}
+                        className="w-40 h-28 object-cover rounded-lg border"
+                      />
+                    </div>
+                  )}
+
+                  {subeditBackground && (
+                    <div className="mt-2">
+                      <img
+                        src={URL.createObjectURL(subeditBackground)}
+                        className="w-40 h-28 object-cover rounded-lg border"
+                      />
+                    </div>
+                  )}
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+
                 <button className="bg-blue-600 text-white px-6 py-2 rounded-lg w-full">
                   Update Container
                 </button>
@@ -651,6 +948,164 @@ function ScreenContainers() {
             </div>
           </div>
         )}
+
+        {editPopup && editingContainer && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+
+            <div className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-xl p-6 relative">
+
+              {/* Close Button */}
+              <button
+                onClick={() => setEditPopup(false)}
+                className="absolute top-4 right-4 text-gray-600 hover:text-red-500 text-xl"
+              >
+                ✕
+              </button>
+
+              <h3 className="text-2xl font-semibold mb-5">
+                Edit Container: {editingContainer.name}
+              </h3>
+
+              {/* Scrollable container */}
+              <div className="max-h-[75vh] overflow-y-auto pr-2 space-y-6">
+
+                <form onSubmit={updateContainer} className="space-y-6">
+
+                  {/* Name */}
+                  <div>
+                    <label className="block font-medium mb-1">Container Name</label>
+                    <input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full border rounded-lg px-4 py-2"
+                    />
+                  </div>
+
+                  {/* Content Type */}
+                  <div>
+                    <label className="block font-medium mb-1">Content Type</label>
+                    <select
+                      value={editType}
+                      onChange={(e) => setEditType(e.target.value)}
+                      className="w-full border rounded-lg px-4 py-2"
+                    >
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                    </select>
+                  </div>
+
+                  {/* Card Image */}
+                  <div>
+                    <label className="block font-medium mb-1">Replace Logo Image</label>
+
+                    <input
+                      type="file"
+                      accept="image/*,video/*,gif/*"
+                      onChange={(e) => setEditCardImage(e.target.files[0])}
+                      className="w-full border border-dashed px-4 py-3 rounded-lg"
+                    />
+
+                    {/* Existing Preview */}
+                    {existingCardImage && !editCardImage && (
+                      <div className="mt-3 relative inline-block">
+                        <img
+                          src={existingCardImage}
+                          className="w-32 h-24 object-cover rounded-lg border"
+                        />
+                        <button
+                          onClick={() => setExistingCardImage(null)}
+                          type="button"
+                          className="absolute -top-2 -right-2 bg-white shadow p-1 rounded-full"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+
+                    {/* New Preview */}
+                    {editCardImage && (
+                      <div className="mt-3 inline-block">
+                        <img
+                          src={URL.createObjectURL(editCardImage)}
+                          className="w-32 h-24 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Background */}
+                  <div>
+                    <label className="block font-medium mb-1">Replace Background</label>
+
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={(e) => setEditBackground(e.target.files[0])}
+                      className="w-full border border-dashed px-4 py-3 rounded-lg"
+                    />
+
+                    {existingBackground && !editBackground && (
+                      <div className="mt-3">
+                        <img
+                          src={existingBackground}
+                          className="w-40 h-28 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+
+                    {editBackground && (
+                      <div className="mt-3">
+                        <img
+                          src={URL.createObjectURL(editBackground)}
+                          className="w-40 h-28 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Subscreen Background */}
+                  <div>
+                    <label className="block font-medium mb-1">Replace Subscreens Background</label>
+
+                    <input
+                      type="file"
+                      accept="image/*,video/*,gif/*"
+                      onChange={(e) => setSubEditBackground(e.target.files[0])}
+                      className="w-full border border-dashed px-4 py-3 rounded-lg"
+                    />
+
+                    {subexistingBackground && !subeditBackground && (
+                      <div className="mt-3">
+                        <img
+                          src={subexistingBackground}
+                          className="w-40 h-28 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+
+                    {subeditBackground && (
+                      <div className="mt-3">
+                        <img
+                          src={URL.createObjectURL(subeditBackground)}
+                          className="w-40 h-28 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Submit */}
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg w-full"
+                  >
+                    Update Container
+                  </button>
+
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
 
 
 
