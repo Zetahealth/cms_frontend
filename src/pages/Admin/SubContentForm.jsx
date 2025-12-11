@@ -136,7 +136,7 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
       "files"
     ],
 
-    "card-carousel": ["title","gallery","main image"],
+    "card-carousel": ["title","gallery", "sub images"],
     
     "slider-thumbnail-view": ["title", "content", "files", "gallery" , "tittle sub content"],
 
