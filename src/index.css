@@ -1,4 +1,18 @@
 @import "tailwindcss";
+
+@layer base {
+  :root,
+  html,
+  body { font-family: "Allerta Stencil", sans-serif !important; }
+
+  .prose,
+  .prose * { font-family: "Allerta Stencil", sans-serif !important; }
+
+  h1,h2,h3,h4,h5,h6,p,span,a,li,button,input,textarea {
+    font-family: "Allerta Stencil", sans-serif !important;
+  }
+}
+
 /* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -23,6 +37,27 @@
   color: #535bf2;
 } */
 
+
+/* now your rules */
+.font-allerta { font-family: "Allerta Stencil", sans-serif; }
+
+/* hide scrollbar cross-browser (strong) */
+.no-scrollbar {
+  -ms-overflow-style: none !important; /* IE/Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
+}
+
+/* make sure box-sizing is sane */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 /* Hide scrollbar but allow scrolling */
 .hide-scrollbar::-webkit-scrollbar {
