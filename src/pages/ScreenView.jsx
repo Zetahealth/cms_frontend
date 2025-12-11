@@ -385,22 +385,38 @@ function ScreenView() {
   const PresentationView = () => {
     if (!selected) return null;
 
-    console.log("----selected-------------0000---------selected-------", selected);
-
     const [logoAnimated, setLogoAnimated] = useState(false);
-    useEffect(() => {
-      setLogoAnimated(true);
-    }, []);
+    useEffect(() => setLogoAnimated(true), []);
 
-    // 🔥 FIXED IMAGES ARRAY — includes sub_image + individual_contents
+    // Normalize images + fallback to files[0] when sub_image missing
     const images =
-      selected.sub_contents?.map((d) => ({
-        individual_contents: d.individual_contents,
-        sub_image: d.sub_image,
-      })) || [];
+      selected.sub_contents?.map((d) => {
+        const files = d.files || [];
+        const fallback = files.length ? files[0] : null;
+        return {
+          individual_contents: d.individual_contents || "",
+          sub_image: d.sub_image || fallback,
+          description: d.description || "",
+          files,
+        };
+      }) || [];
 
-    // ❗ Start with no image selected
+    // guard: nothing to show
+    if (images.length === 0) {
+      return (
+        <div className="w-full h-screen flex items-center justify-center text-gray-300">
+          No images available
+        </div>
+      );
+    }
+
     const [activeIndex, setActiveIndex] = useState(null);
+
+    // helpers
+    const isVideo = (url) => {
+      if (!url) return false;
+      return /\.(mp4|webm|ogg)$/i.test(url);
+    };
 
     const nextImage = () => {
       if (activeIndex === null) return;
@@ -412,143 +428,165 @@ function ScreenView() {
       setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
     };
 
-    // Background always uses the first/main image
-    const backgroundImage = selected.sub_contents?.[0].main_image;
+    // Choose a sensible background URL:
+    // prefer selected.background_url, then selected.files[0], then first sub_content sub_image
+    const bgUrl =
+      selected.background_url ||
+      (selected.files && selected.files.length ? selected.files[0] : null) ||
+      selected.sub_contents?.[0]?.sub_image ||
+      null;
+
+    // poster image to show while video loads (fallback to a static file/subimage)
+    const backgroundPoster =
+      (selected.files && selected.files.length && selected.files[0]) ||
+      selected.sub_contents?.[0]?.sub_image ||
+      null;
+
+    const bgIsVideo = isVideo(bgUrl);
 
     return (
-      <div
-        className={`relative w-full h-screen text-white flex items-center justify-center
-          ${activeIndex !== null ? "backdrop-blur-md brightness-70" : ""}
-        `}
-        style={{
-          backgroundImage: `url(${selected.background_url || backgroundImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-
-        {/* ---------- TOP LEFT LOGO ---------- */}
-        <div
-          className="absolute top-4 left-6 cursor-pointer z-[9999]"
-          style={{ perspective: "1200px" }}
-          onClick={() => setMode("slide-view")}
-        >
-          <img
-            src={containerLogo}
-            alt="logo"
-            className={`h-48 w-auto object-contain z-[9999] ${logoAnimated ? "logo-animate-sliderInner" : "block-hidden"
-              }`}
+      <div className="relative w-full h-screen text-white flex items-center justify-center overflow-hidden">
+        {/* ====== BACKGROUND: prefer bgUrl (which falls back to files[0] or sub_image) ====== */}
+        {bgIsVideo ? (
+          <video
+            src={bgUrl}
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={backgroundPoster || undefined}
+            className="absolute inset-0 w-full h-full object-cover"
+            aria-hidden="true"
           />
-        </div>
-
-        {/* ---------- MAIN TEXT ---------- */}
-        <div className="relative flex flex-col items-center z-20">
-          <h1 className="text-5xl font-bold mb-8 text-center">
-            {selected.title}
-          </h1>
-
+        ) : (
           <div
-            className="user-content w-[70%] text-2xl leading-relaxed text-center bg-black/30 p-3 rounded-2xl"
-            dangerouslySetInnerHTML={{ __html: selected.sub_contents?.[0].description }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${bgUrl || selected.sub_contents?.[0]?.main_image || ""})`,
+            }}
+            aria-hidden="true"
           />
-
-
-
-        </div>
-
-        {/* ---------- CENTER LARGE IMAGE ---------- */}
-        {activeIndex !== null && (
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                      rounded-xl shadow-2xl z-30  p-4"
-          >
-            <img
-              src={images[activeIndex]?.sub_image}
-              className="w-[90vw] max-w-[1150px] h-[60vh] object-cover rounded-xl"
-
-            />
-
-            {/* 🔥 SHOW individual_contents BELOW IMAGE */}
-            <p className="text-white text-xl text-center mt-4 w-[55vw] mx-auto p-2 bg-black/30 rounded-xl">
-              {images[activeIndex]?.individual_contents}
-            </p>
-          </div>
         )}
 
-        {/* ---------- CLOSE BUTTON ---------- */}
-        {activeIndex !== null && (
-          <div
-            onClick={() => setActiveIndex(null)}
-            className="absolute top-5 cursor-pointer z-40"
-          >
-            <div className="text-white text-5xl font-bold drop-shadow">Back</div>
-          </div>
+        {/* overlays and UI (kept as you had them) */}
+        {activeIndex !== null ? (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[6px] transition-opacity duration-300 z-10" />
+        ) : (
+          <div className="absolute inset-0 bg-black/10 z-5" />
         )}
 
-        {/* ---------- LEFT ARROW ---------- */}
-        {activeIndex !== null && (
-          <div
-            onClick={prevImage}
-            className="absolute left-20 top-1/2 -translate-y-1/2 text-6xl cursor-pointer opacity-70 hover:opacity-100 z-40"
-          >
-            ❮
-          </div>
-        )}
-
-        {/* ---------- RIGHT ARROW ---------- */}
-        {activeIndex !== null && (
-          <div
-            onClick={nextImage}
-            className="absolute right-20 top-1/2 -translate-y-1/2 text-6xl cursor-pointer opacity-70 hover:opacity-100 z-40"
-          >
-            ❯
-          </div>
-        )}
-
-        {/* ---------- QR CODE ---------- */}
-        {selected.qr_code_url && (
-          <div className="absolute top-24 right-20 flex flex-col items-center z-40">
-            <div className="w-24 h-24 overflow-hidden ">
+        {activeIndex === null && (
+          <>
+            <div
+              className="absolute top-4 left-6 cursor-pointer z-[9999]"
+              style={{ perspective: "1200px" }}
+              onClick={() => setMode("slide-view")}
+            >
               <img
-                src={selected.qr_code_url}
-                className="w-full h-full object-cover scale-[1.5]" // zoom into QR
-                alt="QR"
+                src={containerLogo}
+                alt="logo"
+                className={`h-48 w-auto object-contain ${logoAnimated ? "logo-animate-sliderInner" : "opacity-0"}`}
               />
             </div>
 
+            <button
+              onClick={() => setMode("slide-view")}
+              className="absolute bottom-40 left-6 z-[9999] bg-black/50 text-white px-5 py-2 rounded-lg text-lg font-semibold shadow-xl hover:bg-black/70"
+            >
+              Back
+            </button>
+          </>
+        )}
+
+        {activeIndex === null && (
+          <div className="relative flex flex-col items-center z-20 px-4">
+            <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-center drop-shadow-lg">{selected.title}</h1>
+
+            <div
+              className="user-content w-full max-w-[1000px] text-lg sm:text-2xl leading-relaxed text-center bg-black/45 p-4 sm:p-6 rounded-2xl backdrop-filter backdrop-blur-sm break-words"
+              dangerouslySetInnerHTML={{ __html: selected.sub_contents?.[0]?.description || "" }}
+            />
+          </div>
+        )}
+
+        {/* Center viewer (gallery modal) */}
+        {activeIndex !== null && (
+          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+            <div className="relative pointer-events-auto rounded-xl shadow-2xl p-4 max-w-[1100px] w-[92%]">
+              <div className="flex items-center justify-center">
+                {isVideo(images[activeIndex]?.sub_image) ? (
+                  <video
+                    src={images[activeIndex]?.sub_image}
+                    controls
+                    autoPlay
+                    className="w-[90vh] max-w-[1000vh] max-h-[70vh] object-fill rounded-md"
+                  />
+                ) : (
+                  <img
+                    src={images[activeIndex]?.sub_image}
+                    className="w-[90vw] max-w-[800px] h-[64vh] object-contain rounded-xl"
+                    alt=""
+                  />
+                )}
+              </div>
+
+              <div className="mt-4 bg-black/40 p-3 rounded-lg max-w-full mx-auto">
+                <div className="text-white text-base sm:text-lg md:text-xl text-center leading-relaxed break-words">
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: images[activeIndex]?.individual_contents || images[activeIndex]?.description || "",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Back button in viewer */}
+        {activeIndex !== null && (
+          <button
+            onClick={() => setActiveIndex(null)}
+            className="absolute bottom-6 left-6 z-40 pointer-events-auto text-white text-2xl font-semibold bg-black/20 px-4 py-2 rounded-lg"
+          >
+            Back
+          </button>
+        )}
+
+        {/* navigation arrows */}
+        {activeIndex !== null && (
+          <>
+            <button onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 z-40 pointer-events-auto text-4xl p-3 rounded-full bg-black/10">
+              ❮
+            </button>
+            <button onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 z-40 pointer-events-auto text-4xl p-3 rounded-full bg-black/10">
+              ❯
+            </button>
+          </>
+        )}
+
+        {/* QR code (hidden when viewer open) */}
+        {activeIndex === null && selected.qr_code_url && (
+          <div className="absolute top-24 right-20 flex flex-col items-center z-40">
+            <div className="w-24 h-24 overflow-hidden ">
+              <img src={selected.qr_code_url} className="w-full h-full object-cover scale-[1.5]" alt="QR" />
+            </div>
             <span className="mt-2 text-white font-semibold">Learn More</span>
           </div>
         )}
 
-
-        {/* ---------- BOTTOM THUMBNAILS ---------- */}
-        {activeIndex == null && (
-          <div
-            className="
-              absolute bottom-10 left-0 w-full 
-              overflow-x-auto whitespace-nowrap 
-              px-6 py-2 hide-scrollbar z-40
-            "
-          >
+        {/* thumbnails */}
+        {activeIndex === null && (
+          <div className="absolute bottom-8 left-0 w-full overflow-x-auto whitespace-nowrap px-6 py-2 hide-scrollbar z-40">
             {images.map((item, i) => (
-              <div key={i} className="inline-block mr-6 text-center">
-                <img
-                  src={item.sub_image}
-                  onClick={() => setActiveIndex(i)}
-                  className={`
-                    w-40 h-28 object-cover rounded-lg shadow-xl cursor-pointer 
-                    transition-all duration-300
-                    ${activeIndex === i
-                      ? "opacity-100 scale-110 border-4 border-white"
-                      : "opacity-60 hover:opacity-100"
-                    }
-                  `}
-                />
-
-                {/* 🔥 TEXT UNDER EACH THUMBNAIL */}
-                {/* <p className="text-white text-sm mt-2 w-40">
-                  {item.individual_contents}
-                </p> */}
+              <div key={i} className="inline-block mr-12 text-center w-44 align-top">
+                <div className="w-40 h-28 overflow-hidden rounded-lg shadow-xl mx-auto cursor-pointer" onClick={() => setActiveIndex(i)}>
+                  {isVideo(item.sub_image) ? (
+                    <img src={(item.sub_image && item.sub_image + "?poster=1") || backgroundPoster} alt={`thumb-${i}`} className="w-full h-full object-cover" />
+                  ) : (
+                    <img src={item.sub_image} alt={`thumb-${i}`} className="w-full h-full object-cover" />
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -556,7 +594,6 @@ function ScreenView() {
       </div>
     );
   };
-
 
   // Replace your existing renderSlideView with this version
   const renderSlideView = () => {
@@ -605,7 +642,7 @@ function ScreenView() {
           <img
             src={containerLogo}
             alt="logo"
-            className="h-20 sm:h-24 md:h-32 lg:h-32 w-auto object-contain"
+            className="h-20 sm:h-24 md:h-32 lg:h-28 w-auto object-contain"
           />
         </div>
 
@@ -618,10 +655,10 @@ function ScreenView() {
             let style = {
               position: "absolute",
               width: "78vw",
-              maxWidth: "500px",
+              maxWidth: "600px",
               height: "50vh",
-              maxHeight: "300px",
-              borderRadius: "12px",
+              maxHeight: "350px",
+
               overflow: "hidden",
               transition: "all 0.6s ease",
               opacity: 0,
@@ -636,8 +673,8 @@ function ScreenView() {
             // offsets for mobile/desktop (two steps)
             const mobileOffset1 = "42vw";
             const mobileOffset2 = "80vw";
-            const desktopOffset1 = "250px";
-            const desktopOffset2 = "400px";
+            const desktopOffset1 = "300px";
+            const desktopOffset2 = "500px";
             const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
             const off1 = isMobile ? mobileOffset1 : desktopOffset1;
             const off2 = isMobile ? mobileOffset2 : desktopOffset2;
@@ -723,7 +760,7 @@ function ScreenView() {
                 {/* center title overlay */}
                 {pos === "center" && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-xl text-center px-4">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-allerta font-bold text-white drop-shadow-xl text-center px-4">
                       {c.title}
                     </h2>
                   </div>
@@ -732,7 +769,7 @@ function ScreenView() {
                 {/* clickable hot area for center */}
                 {pos === "center" && (
                   <div
-                    className="absolute inset-0 cursor-pointer pointer-events-auto"
+                    className="absolute inset-0 cursor-pointer pointer-events-auto font-allerta"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelected(c);
@@ -754,7 +791,7 @@ function ScreenView() {
                         p-3 sm:p-4 md:p-5 rounded-xl"
         >
           <div
-            className="prose prose-invert max-w-none"
+            className="prose prose-invert font-allerta max-w-none"
             dangerouslySetInnerHTML={{ __html: contents[activeIndex]?.content || "" }}
           />
         </div>
@@ -1143,25 +1180,32 @@ function ScreenView() {
   const renderCardCarouselView = () => {
     return (
       <div
-        className="w-full min-h-screen bg-cover bg-center relative p-4 md:p-10"
+        className="w-full h-screen bg-cover bg-center relative py-4 md:py-10 px-4"
         style={{ backgroundImage: `url(${background})` }}
       >
         {/* BACK BUTTON */}
-        {/* <div
+        <div
           onClick={() => navigate(`/container/${container}`)}
-          className="absolute left-4 md:left-10 top-4 md:top-10 cursor-pointer select-none flex items-center gap-2 md:gap-3 z-50"
+          className="absolute left-4 md:left-24 top-2 md:top-2 cursor-pointer select-none flex items-center gap-2 md:gap-3 z-50"
         >
-          <span className="text-white text-3xl md:text-5xl font-bold drop-shadow">←</span>
+          <div className="grid place-items-center">
+            <span className="text-white text-6xl font-extrabold drop-shadow-lg leading-none">
+              ←
+            </span>
 
-          <p className="text-white text-lg md:text-2xl font-bold tracking-wide drop-shadow mt-1">
-            BACK
-          </p>
-        </div> */}
+            <p className="text-white text-lg md:text-2xl font-bold tracking-wide drop-shadow">
+              BACK
+            </p>
+          </div>
+
+        </div>
 
         {/* TITLE */}
-        <h1 className="text-center text-3xl md:text-6xl font-bold text-white drop-shadow mb-8 md:mb-16 px-4">
-          {screenName || "CONTENT LIST"}
-        </h1>
+        <div className="text-sm">
+          <h1 className="text-center font-semibold text-white drop-shadow mb-8 md:mb-16 px-4">
+            {screenName || "CONTENT LIST"}
+          </h1>
+        </div>
 
         {/* LOGO */}
         <div
@@ -1178,14 +1222,16 @@ function ScreenView() {
           <img
             src={containerLogo}
             alt="logo"
-            className="h-16 md:h-36 w-auto object-contain"
+            className="h-16 md:h-26 w-auto object-contain mr-20"
           />
         </div>
 
         {/* HORIZONTAL SCROLL CARDS */}
-        <div className="w-full overflow-x-auto overflow-y-hidden pb-5 no-scrollbar">
-          <div className="flex gap-6 md:gap-10 flex-nowrap px-4 md:px-10 w-fit">
-
+        <div className="w-full pb-5 no-scrollbar" style={{ paddingInline: 16, boxSizing: 'border-box' }}>
+          <div
+            className="flex gap-3 md:gap-4 flex-nowrap items-stretch"
+            style={{ minWidth: 'max-content' }} // ensures the row can scroll without forcing body width
+          >
             {contents.map((item, index) => (
               <div
                 key={index}
@@ -1193,66 +1239,205 @@ function ScreenView() {
                   setSelected(item);
                   setMode("card-detail");
                 }}
-                className="
-                  relative
-                  min-w-[220px] sm:min-w-[260px] md:min-w-[340px] lg:min-w-[380px]
-                  h-[380px] sm:h-[460px] md:h-[620px] lg:h-[720px]
-                  rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden
-                  cursor-pointer transition-transform hover:scale-105
-                  bg-cover bg-center
-                "
+                className={`
+                          flex-none
+                          relative
+                          min-w-[220px] sm:min-w-[260px] md:min-w-[340px] lg:min-w-[280px]
+                          h-[380px] sm:h-[460px] md:h-[620px] lg:h-[560px]
+                          rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden
+                          cursor-pointer transition-transform 
+                          bg-cover bg-center
+                        `}
                 style={{
                   backgroundImage: `url(${item.files?.[0]})`,
                 }}
               >
-
                 {/* Overlay for readability */}
-                <div className="absolute inset-0 bg-black/30"></div>
+                <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>
 
                 {/* TITLE */}
-                <div className="
-                  absolute inset-0 flex items-center justify-center 
-                  text-center p-2 sm:p-4
-                ">
-                  <p className="text-white text-xl sm:text-2xl md:text-4xl font-bold drop-shadow-lg px-2">
+                <div className="absolute inset-0 flex items-center justify-center text-center p-2 sm:p-4">
+                  <p className="text-white/80 text-xl sm:text-2xl md:text-3xl font-semibold drop-shadow-2xl px-4">
                     {item.title}
                   </p>
                 </div>
-
               </div>
             ))}
-
           </div>
         </div>
+
       </div>
     );
   };
 
+  /* Utility: strip HTML -> plain text */
+  function stripHtml(html) {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html || "";
+    return tmp.textContent || tmp.innerText || "";
+  }
+  function SplitByLines({ html, lines = 6 }) {
+    const containerRef = useRef(null);
+    const measurerRef = useRef(null);
+    const [firstText, setFirstText] = useState("");
+    const [restText, setRestText] = useState("");
+
+    useEffect(() => {
+      if (!containerRef.current || !measurerRef.current) return;
+
+      const container = containerRef.current;
+      const measurer = measurerRef.current;
+
+      // Copy relevant computed styles from visible container to hidden measurer so measurement matches.
+      const cs = getComputedStyle(container);
+      const copyStyles = [
+        "fontSize",
+        "fontFamily",
+        "fontWeight",
+        "lineHeight",
+        "letterSpacing",
+        "wordSpacing",
+        "whiteSpace",
+        "paddingLeft",
+        "paddingRight",
+        "paddingTop",
+        "paddingBottom",
+        "boxSizing",
+      ];
+      copyStyles.forEach((prop) => {
+        try {
+          measurer.style[prop] = cs[prop];
+        } catch (e) {
+          // ignore unsupported props
+        }
+      });
+
+      // Ensure measurer width equals container width (important for wrapping)
+      measurer.style.width = `${container.clientWidth}px`;
+      measurer.style.visibility = "hidden";
+      measurer.style.position = "absolute";
+      measurer.style.left = "-9999px";
+      measurer.style.top = "0";
+      measurer.style.whiteSpace = "normal";
+      measurer.style.padding = "0";
+      measurer.style.margin = "0";
+
+      const plain = stripHtml(html);
+
+      // If empty, set both empty
+      if (!plain) {
+        setFirstText("");
+        setRestText("");
+        return;
+      }
+
+      // measure a single-line height
+      measurer.textContent = "A";
+      const lineHeight = parseFloat(getComputedStyle(measurer).lineHeight) || measurer.clientHeight || 16;
+      const allowedHeight = lineHeight * lines;
+
+      // Binary search for maximum characters fitting into allowedHeight
+      let lo = 0;
+      let hi = plain.length;
+      let best = 0;
+
+      while (lo <= hi) {
+        const mid = Math.floor((lo + hi) / 2);
+        measurer.textContent = plain.slice(0, mid);
+        const h = measurer.scrollHeight;
+        if (h <= allowedHeight) {
+          best = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+
+      // Find nearest safe word boundary (avoid cutting in the middle of a word)
+      let safeSplit = best;
+      if (safeSplit < plain.length) {
+        const lastSpace = plain.lastIndexOf(" ", safeSplit);
+        if (lastSpace > 10) safeSplit = lastSpace;
+      }
+      // final slices
+      const first = plain.slice(0, safeSplit).trim();
+      const rest = plain.slice(safeSplit).trim();
+
+      setFirstText(first);
+      setRestText(rest);
+
+      // cleanup measurer
+      measurer.textContent = "";
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [html, lines, /* respond to layout changes */]);
+
+    // Recalculate on window resize so measure remains accurate
+    useEffect(() => {
+      function onResize() {
+        // small debounce-ish approach
+        if (containerRef.current) {
+          setFirstText((s) => s);
+        }
+      }
+      window.addEventListener("resize", onResize);
+      return () => window.removeEventListener("resize", onResize);
+    }, []);
+
+    return (
+      <>
+        {/* Hidden measurer element */}
+        <div ref={measurerRef} aria-hidden />
+
+        {/* Visible container used for copying computed styles */}
+        <div ref={containerRef}>
+          {/* top: first N lines as full-width */}
+          <div className="user-content break-words" style={{ width: "100%" }}>
+            <p style={{ margin: 0, lineHeight: "1.6", whiteSpace: "normal" }}>{firstText}</p>
+          </div>
+
+          <div className="h-3" />
+
+          {/* remainder: 70% width on md+ */}
+          <div className="flex">
+            <div className="w-full md:w-[80%] user-content break-words">
+              <p style={{ margin: 0, lineHeight: "1.6", whiteSpace: "normal" }}>{restText}</p>
+            </div>
+            <div className="hidden md:block md:w-[30%]" />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   const renderCardDetailView = () => {
     if (!selected) return null;
 
     return (
       <div
-        className="w-full min-h-screen bg-cover bg-center relative p-4 md:p-10 text-white"
+        className="w-full h-screen bg-cover bg-center relative p-4 md:p-6 text-white"
         style={{ backgroundImage: `url(${selected.background_url || background})` }}
       >
 
         {/* BACK BUTTON */}
         <div
           onClick={() => setMode("card-carousel")}
-          className="absolute left-4 md:left-10 top-4 md:top-10 cursor-pointer select-none flex items-center gap-2 md:gap-3 z-50"
+          className="absolute left-4 md:left-10 top-4 md:top-4 cursor-pointer select-none flex items-center gap-2 md:gap-3 z-50"
         >
-          <span className="text-white text-3xl md:text-5xl font-bold drop-shadow">←</span>
-          <p className="text-lg md:text-2xl font-bold tracking-wide drop-shadow mt-1">
-            BACK
-          </p>
+          <div className="grid place-items-center pl-12">
+            <span className="text-white text-6xl font-extrabold drop-shadow-lg leading-none">
+              ←
+            </span>
+
+            <p className="text-white text-lg md:text-2xl font-extrabold tracking-wide drop-shadow">
+              BACK
+            </p>
+          </div>
         </div>
 
         {/* TITLE */}
-        <div className="flex justify-center mb-6 md:mb-10 px-2 slide-up z-[9999]">
-          <div className="bg-yellow-400 text-black px-6 md:px-10 py-3 md:py-4 rounded-xl shadow-xl 
-                          text-xl md:text-3xl font-bold text-center">
+        <div className="flex justify-center mb-6 md:mb-6 px-2 pt-4 slide-up z-[9999]">
+          <div className="bg-yellow-400 text-black px-6 md:px-10 py-3 md:py-4  shadow-xl 
+                          text-xl md:text-3xl font-semibold text-center">
             {selected.title}
           </div>
         </div>
@@ -1272,140 +1457,70 @@ function ScreenView() {
           <img
             src={containerLogo}
             alt="logo"
-            className="h-20 w-auto md:h-40 object-contain"
+            className="h-20 w-auto md:h-32 mr-12 object-contain"
           />
         </div>
 
         {/* CENTER PANEL */}
         <div
           className="
-            absolute left-1/2 w-[95%] sm:w-[90%] md:w-[80%] max-w-7xl
-            bg-white/20 backdrop-blur-xl p-6 md:p-12 rounded-3xl shadow-2xl
-            transform -translate-x-1/2
-            top-[22%] sm:top-[20%] md:top-[15%]   /* ✅ FIX: added more spacing */
+            absolute left-1/2 w-[95%] sm:w-[90%] md:w-[90%] max-w-8xl
+            bg-white/10 backdrop-blur-sm py-12 rounded-3xl shadow-3xl
+            transform -translate-x-1/2 
+            top-[22%] sm:top-[20%] md:top-[22%]   /* ✅ FIX: added more spacing */
             z-[50]
           "
         >
 
 
           {/* MAIN CONTENT BLOCK */}
-          <div className="flex flex-col md:flex-row gap-6 md:gap-12 pb-16 md:pb-24 px-2 md:px-6">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-12   px-2 md:px-12">
 
             {/* LEFT IMAGE */}
-            <div className="w-full md:w-[60%] flex flex-col items-center gap-4 md:gap-6">
-
+            <div className="w-full md:w-[42%] h-[450px] flex flex-col items-center gap-4 md:gap-6">
               <img
                 src={selected.sub_contents?.[0].sub_image}
-                className="w-full max-w-2xl md:max-w-3xl rounded-2xl shadow-xl"
+                className="w-full h-full object-cover rounded-2xl shadow-xl"
                 alt=""
               />
+
 
               {/* View Gallery */}
               {selected.has_subcontent && (
                 <button
                   onClick={() => setGalleryOpen(true)}
-                  className="w-full max-w-2xl bg-white/30 backdrop-blur-lg text-white
+                  className="w-full max-w-2xl  text-white
                               font-semibold text-lg md:text-xl py-3 md:py-4 
-                              rounded-xl shadow-lg border border-white/40"
+                              rounded-xl bg-black/15 backdrop-blur-3xl shadow-3xl"
                 >
                   View Gallery
                 </button>
               )}
 
             </div>
-
             {/* RIGHT TEXT */}
-            {/* <div className="w-full md:w-[50%] text-base md:text-xl leading-relaxed">
+            <div className="w-full md:w-[90%] text-base md:text-xl leading-relaxed relative">
+              <div className="flex flex-col md:flex-row items-start gap-4">
+                <div className="flex-1">
+                  <SplitByLines html={selected.content} lines={6} />
+                </div>
+              </div>
 
-              {showFullText ? (
-                <>
-                  {selected.content}
-                  <button
-                    onClick={() => setShowFullText(false)}
-                    className="text-yellow-300 font-bold ml-2 underline"
-                  >
-                    Show less
-                  </button>
-                </>
-              ) : (
-                <>
-                  {trimWords(selected.content, 60)}
-                  <button
-                    onClick={() => setShowFullText(true)}
-                    className="text-yellow-300 font-bold ml-2 underline"
-                  >
-                    Show more
-                  </button>
-                </>
+              {/* QR CODE — unchanged */}
+              {selected.qr_code_url && (
+                <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 flex flex-col items-center">
+                  <div className="w-40 h-40 overflow-hidden rounded-sm">
+                    <img
+                      src={selected.qr_code_url}
+                      className="w-full h-full object-cover scale-[1.4]"
+                      alt="QR"
+                    />
+                  </div>
+                  <span className="mt-2 text-white font-semibold">Learn More</span>
+                </div>
               )}
-
-            </div> */}
-
-            <div className="w-full md:w-[50%] text-base md:text-xl leading-relaxed">
-
-              {showFullText ? (
-                <>
-                  {/* FULL HTML CONTENT */}
-                  <div
-                    className="user-content"
-                    dangerouslySetInnerHTML={{ __html: selected.content }}
-                  />
-
-                  <button
-                    onClick={() => setShowFullText(false)}
-                    className="text-yellow-300 font-bold ml-2 underline"
-                  >
-                    Show less
-                  </button>
-                </>
-              ) : (
-                <>
-                  {/* TRIMMED HTML CONTENT */}
-                  <div
-                    className="user-content"
-                    dangerouslySetInnerHTML={{
-                      __html: trimWords(selected.content, 60),
-                    }}
-                  />
-
-                  <button
-                    onClick={() => setShowFullText(true)}
-                    className="text-yellow-300 font-bold ml-2 underline"
-                  >
-                    Show more
-                  </button>
-                </>
-              )}
-
             </div>
-
-
-
-
-
-
-
-
-
-
-
           </div>
-
-
-          {/* QR CODE */}
-          {selected.qr_code_url && (
-            <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 flex flex-col items-center">
-              <img
-                src={selected.qr_code_url}
-                className="w-28 h-28 md:w-44 md:h-44 bg-white p-2 md:p-3 rounded-xl shadow-xl"
-                alt="QR"
-              />
-              <span className="mt-2 text-white font-semibold text-sm md:text-base">
-                Learn More
-              </span>
-            </div>
-          )}
-
         </div>
       </div>
     );
