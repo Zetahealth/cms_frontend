@@ -142,7 +142,7 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
 
     "article-view": ["title", "content", "gallery"],
 
-    "weapons-view": ["title", "content", "files"],
+    "weapons-view": ["title", "content", "sub image"],
 
     "TriBranchShowcaseView": ["title", "content", "files" , "sub image" ,  "background" , "main image"],
     

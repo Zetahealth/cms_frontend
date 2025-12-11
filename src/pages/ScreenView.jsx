@@ -2237,7 +2237,14 @@ function ScreenView() {
           "
         >
           {/* LEFT IMAGE */}
-          <div className="flex justify-center items-start mt-10 md:mt-0">
+          <div className="flex justify-center items-start mt-10 md:mt-0"
+            onClick={() => {
+              // console.log("888888888-------currentpage-------------8888888888888",currentpage)
+              setMode('weapon-detail-view');
+              setSelected(currentpage);
+            }}
+      
+          >
             <img
               src={currentpage.files?.[0]}
               className="
@@ -2274,10 +2281,6 @@ function ScreenView() {
               className="user-content"
               dangerouslySetInnerHTML={{ __html: currentpage.content }}
             ></div>
-
-
-
-
 
           </div>
         </div>
@@ -2326,6 +2329,32 @@ function ScreenView() {
       </div>
     );
   };
+
+  const BoloDynamicUI = () => {
+
+    const items = selected?.sub_contents[0] || [];
+    console.log("items==================",items)
+    return (
+      <div
+        className="relative w-full h-[1000px] bg-cover bg-center text-white"
+        style={{
+          backgroundImage: `url(${items.sub_image})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }} // Your wooden BG
+        onClick={()=>{
+          setMode('weapons-view');
+        }}
+      >
+        {/* Title */}
+        {/* <h1 className="text-center text-4xl font-semibold py-10">
+          {selected.title}
+        </h1> */}
+      </div>
+    );
+  };
+
+
 
 
 // -------------------------------TriBranchShowcaseView------------------------------------------------
@@ -3384,6 +3413,8 @@ function ScreenView() {
   };
 
 
+
+
   // const SpecialOpsScreen = () => {
   //   if (!contents) return null;
 
@@ -3983,7 +4014,9 @@ function ScreenView() {
       {mode === 'slider-thumb' && <SliderThumbnailGalleryView /> }
       {mode === 'article-view' && <ArticleShowcaseView /> }
       {mode === 'detail-article-view' && <DetailArticleView />}
+
       {mode === 'weapons-view' && <WeaponsView />}
+      {mode === 'weapon-detail-view' && <BoloDynamicUI />}
 
       {mode === "TriBranchShowcaseView" && <BranchesShowcaseView /> }
       {mode === "subcontent-view" && <SubContentShowcaseView /> }
