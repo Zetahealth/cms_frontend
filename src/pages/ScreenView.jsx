@@ -3615,8 +3615,6 @@ function ScreenView() {
     const title = data.title || "";
     const subtitleHTML = data.content || "";
 
-    const smoke = "/smoke.gif";
-
     return (
       <div className="relative w-full h-screen text-white overflow-hidden">
 
@@ -3940,7 +3938,6 @@ function ScreenView() {
     return (
       <div className="relative w-full h-screen text-white overflow-hidden">
 
-        {/* ---------------------------------------------------- */}
         {/*  FIRST SCREEN                                         */}
         {/* ---------------------------------------------------- */}
         {!showInfo && (
@@ -3954,7 +3951,7 @@ function ScreenView() {
 
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent z-10"></div>
 
-            {/* AFP LOGO */}
+            {/* AFP LOGO - TOP LEFT */}
             {afpLogo && (
               <img
                 src={afpLogo}
@@ -3962,16 +3959,25 @@ function ScreenView() {
               />
             )}
 
+            {/* REGIMENT LOGO - TOP RIGHT */}
+            {regimentLogo && (
+              <img
+                src={regimentLogo}
+                className="absolute top-10 right-10 w-32 drop-shadow-2xl z-30"
+              />
+            )}
+
             {/* CENTER LOGO */}
             {centerLogo && (
               <img
                 src={centerLogo}
-                className="absolute top-[22%] left-[8%] w-[260px] drop-shadow-2xl z-30"
+                className="absolute top-[18%] left-[8%] w-[260px] drop-shadow-2xl z-30"
               />
             )}
 
-            {/* TITLES */}
-            <div className="absolute top-[42%] left-[8%] z-30">
+            {/* TITLES - MOVED LOWER TO AVOID MERGE */}
+            <div className="absolute top-[40%] left-[8%] z-30">
+
               <h1 className="text-5xl font-semibold drop-shadow-2xl">
                 {currentpage?.title}
               </h1>
@@ -3981,15 +3987,7 @@ function ScreenView() {
               </h2>
             </div>
 
-            {/* RIGHT LOGO */}
-            {regimentLogo && (
-              <img
-                src={regimentLogo}
-                className="absolute top-10 right-10 w-32 drop-shadow-2xl z-30"
-              />
-            )}
-
-            {/* SOLDIER */}
+            {/* SOLDIER IMAGE */}
             {soldierImage && (
               <img
                 src={soldierImage}
@@ -4007,6 +4005,7 @@ function ScreenView() {
             </button>
           </div>
         )}
+
 
         {/* ---------------------------------------------------- */}
         {/*  SECOND SCREEN                                        */}
