@@ -483,7 +483,7 @@ function Screens() {
                     {currentScreens.map((s) => (
                     <li key={s.id} className="border-b pb-2 mb-2 flex justify-between items-center">
                         <div>
-                        <div className="flex gap-4 items-center">
+                        {/* <div className="flex gap-4 items-center">
                             <span className="font-medium">{s.name}</span>
                             <a
                             href={`/screen/${s.id}`}
@@ -493,7 +493,7 @@ function Screens() {
                             >
                             Open
                             </a>
-                        </div>
+                        </div> */}
 
                         <div className="mt-2 text-sm text-gray-600">
                             Assigned Content:

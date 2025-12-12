@@ -11,7 +11,7 @@ const cable = ActionCable.createConsumer("wss://backendafp.connectorcore.com/cab
 function ScreenView() {
   const { slug } = useParams();
   const [container, setContainer] = useState(null);
-  // const containerId = new URLSearchParams(window.location.search).get("container");
+  const containerId = new URLSearchParams(window.location.search).get("container");
   // setContainer(containerId);
 
 
@@ -35,7 +35,7 @@ function ScreenView() {
 
   const [screenName, setScreenName] = useState(null);
   const [containerLogo, setContainerLogo] = useState(null);
-  const [containerId, setContainerId] = useState(null);
+  // const [containerId, setContainerId] = useState(null);
 
   const [subgalleryOpen, SetSubgalleryOpen] = useState(null)
 
@@ -90,7 +90,7 @@ function ScreenView() {
       setContainer(containerId || null);
       setScreenName(data.screen_name || "");
       setContainerLogo(data.container_files || null)
-      setContainerId(data.container_ids || null)
+      // setContainerId(data.container_ids || null)
       // console.log("aaaaaaaaaaaaaaaaaaaaaaaa-----------",data)
       setMode(data.display_mode)
 
