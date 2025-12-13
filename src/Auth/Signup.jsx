@@ -2,6 +2,9 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import Api from "../Api/Api";
+import logo from "../../public/logo4.jpg";
+
+
 export default function Signup() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -25,6 +28,13 @@ export default function Signup() {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <div className="bg-white shadow-lg rounded-lg p-8 w-96">
+        <div className="flex justify-center mb-4">
+          <img
+            src={logo}
+            alt="App Logo"
+            className="h-28 w-auto object-contain"
+          />
+        </div>
         <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
         <form onSubmit={handleSignup} className="flex flex-col gap-4">
           <input

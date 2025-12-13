@@ -6,7 +6,7 @@ export default function PrivateRoute({ children, role }) {
 
   if (!token) return <Navigate to="/" />;
 
-  if (role && userRole !== role) return <Navigate to="/unauthorized" />;
+  // if (role && userRole !== role) return <Navigate to="/unauthorized" />;
 
   return children;
 }

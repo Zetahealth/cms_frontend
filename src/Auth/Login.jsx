@@ -77,7 +77,7 @@ export default function Login() {
         if (roleName === "admin") {
           navigate("/admin/screens");
         } else {
-          navigate("/dashboard");
+          navigate("/admin/screens");
         }
       } catch (error) {
         console.error("Network error:", error);
@@ -166,12 +166,12 @@ export default function Login() {
           </button>
         </form>
 
-        {/* <p className="text-sm mt-4 text-center">
+        <p className="text-sm mt-4 text-center">
           Don’t have an account?{" "}
           <Link to="/signup" className="text-blue-600 hover:underline">
             Sign up
           </Link>
-        </p> */}
+        </p>
         
       </div>
     </div>

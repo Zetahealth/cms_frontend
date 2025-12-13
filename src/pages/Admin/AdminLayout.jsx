@@ -44,6 +44,7 @@ import UploadContent from "./UploadContent";
 import Screens from "./Screens";
 import ScreenContainers from "./ScreenContainers";
 import Contents from "./Contents";
+import Logs from "./Logs";
 
 function AdminLayout() {
   return (
@@ -55,6 +56,7 @@ function AdminLayout() {
           <Route path="upload-content" element={<UploadContent />} />
           <Route path="screen-containers" element={<ScreenContainers />} />
           <Route path="contents" element={<Contents />} />
+          <Route path="logs" element={<Logs />} />
         </Routes>
       </div>
     </div>
