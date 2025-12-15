@@ -7,7 +7,7 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
   // console.log("--------------------------editing------",editing , parentContentId , onSaved)
 
 
-
+  const permission = sessionStorage.getItem("permission");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [subcontents , setSubcontents] = useState("");
@@ -66,6 +66,11 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
     e.preventDefault();
 
     // if (!validate()) return;
+
+    if (permission !== "editor") {
+        alert("❌ You do not have permission to create or edit sub content.");
+        return;
+    }
 
     setLoading(true);
 

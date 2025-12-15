@@ -439,7 +439,7 @@ function Contents() {
   const [contents, setContents] = useState([]);
   const [assignments, setAssignments] = useState({});
   const token = sessionStorage.getItem("authToken");
-
+  const permission = sessionStorage.getItem("permission");
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
   const [editTitle, setEditTitle] = useState("");
@@ -459,12 +459,52 @@ function Contents() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
     // Pagination Logic
-  const totalPages = Math.ceil(contents.length / itemsPerPage);
+  // const totalPages = Math.ceil(contents.length / itemsPerPage);
 
+
+
+  const [search, setSearch] = useState("");
+
+  // Filter logic
+  const filteredContents = contents.filter((c) => {
+    const query = search.toLowerCase();
+    return (
+      c.title?.toLowerCase().includes(query) ||
+      c.content?.toLowerCase().includes(query) ||
+      c.content_type?.toLowerCase().includes(query)
+    );
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredContents.length / itemsPerPage);
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentContents = filteredContents.slice(indexOfFirst, indexOfLast);
 
-  const currentContents = contents.slice(indexOfFirst, indexOfLast);
+
+
+
+
+
+
+  // const [search, setSearch] = useState("");
+
+
+  // const totalPages = Math.ceil(filteredContents.length / itemsPerPage);
+
+  // const indexOfLast = currentPage * itemsPerPage;
+  // const indexOfFirst = indexOfLast - itemsPerPage;
+
+  // const currentContents = filteredContents.slice(
+  //   indexOfFirst,
+  //   indexOfLast
+  // );
+
+
+  // const indexOfLast = currentPage * itemsPerPage;
+  // const indexOfFirst = indexOfLast - itemsPerPage;
+
+  // const currentContents = contents.slice(indexOfFirst, indexOfLast);
 
 
   const [editMode, setEditMode] = useState("normal-view");
@@ -476,6 +516,11 @@ function Contents() {
   const handlePrev = () => {
     if (currentPage > 1) setCurrentPage((p) => p - 1);
   };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
 
 
   useEffect(() => {
@@ -694,7 +739,18 @@ function Contents() {
   return (
     <div className="p-6">
       <section className="bg-white shadow-md rounded-2xl p-6">
-        <h3 className="text-2xl font-semibold mb-4 text-gray-700">Contents</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-700">Contents</h3>
+
+          <input
+            type="text"
+            placeholder="Search content by title, text, or type..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full md:w-1/3  rounded-lg  border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
         {contents.length === 0 ? (
           <p className="text-gray-500">No contents uploaded yet.</p>
         ) : (
@@ -712,60 +768,64 @@ function Contents() {
                     </span>
                   </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openEditPopup(c)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg transition duration-200"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteContent(c.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition duration-200"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {permission === "editor" && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openEditPopup(c)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg transition duration-200"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteContent(c.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg transition duration-200"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                  
                 </div>
+                {permission === "editor" && (
+                  <div className="mt-3">
+                    <span className="block text-gray-600 mb-2 font-medium">
+                      Assign to:
+                    </span>
+                    <div className="flex flex-wrap gap-3">
+                      {screens.map((s) => {
+                        const isAssigned = assignments[s.id]?.some(
+                          (assigned) => assigned.id === c.id
+                        );
 
-                <div className="mt-3">
-                  <span className="block text-gray-600 mb-2 font-medium">
-                    Assign to:
-                  </span>
-                  <div className="flex flex-wrap gap-3">
-                    {screens.map((s) => {
-                      const isAssigned = assignments[s.id]?.some(
-                        (assigned) => assigned.id === c.id
-                      );
-
-                      return (
-                        <div
-                          key={`screen-${s.id}-content-${c.id}`}
-                          className="flex items-center gap-2"
-                        >
-                          <button
-                            onClick={() =>
-                              isAssigned ? unassign(c.id, s.id) : assign(s.id, c.id)
-                            }
-                            className={`px-4 py-1 rounded-lg transition duration-200 ${
-                              isAssigned
-                                ? "bg-red-500 text-white hover:bg-red-600"
-                                : "bg-blue-500 text-white hover:bg-blue-600"
-                            }`}
+                        return (
+                          <div
+                            key={`screen-${s.id}-content-${c.id}`}
+                            className="flex items-center gap-2"
                           >
-                            {s.name}
-                          </button>
+                            <button
+                              onClick={() =>
+                                isAssigned ? unassign(c.id, s.id) : assign(s.id, c.id)
+                              }
+                              className={`px-4 py-1 rounded-lg transition duration-200 ${
+                                isAssigned
+                                  ? "bg-red-500 text-white hover:bg-red-600"
+                                  : "bg-blue-500 text-white hover:bg-blue-600"
+                              }`}
+                            >
+                              {s.name}
+                            </button>
 
-                          {isAssigned && (
-                            <span className="ml-2 px-2 py-1 bg-blue-100 rounded flex items-center gap-1">
-                              Assigned
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
+                            {isAssigned && (
+                              <span className="ml-2 px-2 py-1 bg-blue-100 rounded flex items-center gap-1">
+                                Assigned
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
               </li>
             ))}
           </ul>

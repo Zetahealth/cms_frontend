@@ -10,7 +10,7 @@ function ScreenContainers() {
   const [contentFiles, setContentFiles] = useState(null);
   const [backgroundFile, setBackgroundFile] = useState(null);
   const [subbackgroundFile, setSubBackgroundFile] = useState(null);
-  
+  const permission = sessionStorage.getItem("permission");
 
   const [loading, setLoading] = useState(false);
   const [displayMode, setDisplayMode] = useState("slide-view");
@@ -143,6 +143,11 @@ function ScreenContainers() {
   // }
   async function createContainer(e) {
     e.preventDefault();
+
+    if(permission !== "editor") {
+      alert("❌ You do not have permission to create containers.");
+      return;
+    }
 
     if (!validateForm()) return; // STOP IF INVALID
 
@@ -661,63 +666,67 @@ function ScreenContainers() {
                     <div className="p-4 space-y-4 bg-white">
 
                       {/* ACTION BUTTONS */}
-                      <div className="flex flex-wrap items-center gap-4">
-                        <a
-                          href={`/container/${container.id}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-4 py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200"
-                        >
-                          Open
-                        </a>
+                      {permission === "editor" && (
+                        <>
+                        <div className="flex flex-wrap items-center gap-4">
+                          <a
+                            href={`/container/${container.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-4 py-2 rounded-lg bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200"
+                          >
+                            Open
+                          </a>
 
-                        <button
-                          onClick={() => openEdit(container)}
-                          className="px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 font-semibold hover:bg-yellow-200"
-                        >
-                          Edit
-                        </button>
+                          <button
+                            onClick={() => openEdit(container)}
+                            className="px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 font-semibold hover:bg-yellow-200"
+                          >
+                            Edit
+                          </button>
 
-                        <button
-                          onClick={() => deleteContainer(container.id)}
-                          className="px-4 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200"
-                        >
-                          Delete
-                        </button>
-                      </div>
-
-                      {/* ASSIGN SCREENS */}
-                      <div>
-                        <p className="text-gray-700 font-medium mb-2">
-                          Assign / Unassign Screens:
-                        </p>
-
-                        <div className="flex flex-wrap gap-2">
-                          {screens.map((s) => {
-                            const assigned = container.screens?.some(
-                              (sc) => sc.id === s.id
-                            );
-
-                            return (
-                              <button
-                                key={s.id}
-                                onClick={() =>
-                                  assigned
-                                    ? unassignScreenFromContainer(container.id, s.id)
-                                    : assignScreenToContainer(container.id, s.id)
-                                }
-                                className={`px-4 py-2 rounded-lg text-white transition ${
-                                  assigned
-                                    ? "bg-red-500 hover:bg-red-600"
-                                    : "bg-blue-500 hover:bg-blue-600"
-                                }`}
-                              >
-                                {s.name}
-                              </button>
-                            );
-                          })}
+                          <button
+                            onClick={() => deleteContainer(container.id)}
+                            className="px-4 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200"
+                          >
+                            Delete
+                          </button>
                         </div>
-                      </div>
+                      
+                        {/* ASSIGN SCREENS */}
+                        <div>
+                          <p className="text-gray-700 font-medium mb-2">
+                            Assign / Unassign Screens:
+                          </p>
+
+                          <div className="flex flex-wrap gap-2">
+                            {screens.map((s) => {
+                              const assigned = container.screens?.some(
+                                (sc) => sc.id === s.id
+                              );
+
+                              return (
+                                <button
+                                  key={s.id}
+                                  onClick={() =>
+                                    assigned
+                                      ? unassignScreenFromContainer(container.id, s.id)
+                                      : assignScreenToContainer(container.id, s.id)
+                                  }
+                                  className={`px-4 py-2 rounded-lg text-white transition ${
+                                    assigned
+                                      ? "bg-red-500 hover:bg-red-600"
+                                      : "bg-blue-500 hover:bg-blue-600"
+                                  }`}
+                                >
+                                  {s.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                      )}
 
                       {/* ASSIGNED LIST */}
                       <p className="text-sm text-gray-600">
@@ -727,42 +736,45 @@ function ScreenContainers() {
                           : "None"}
                       </p>
 
-          
-                      <p className="text-gray-700 font-medium mt-4">
-                        More Screens (Subscreens):
-                      </p>
-                       {/* <button
-                          // onClick={() => deleteContainer(container.id)}
-                          className="px-4 py-2 rounded-lg bg-green-100 text-green-700 font-semibold hover:bg-green-200"
-                        >
-                          Upload Backgroud 
-                        </button> */}
-
-                      <div className="flex flex-wrap gap-2">
-                        {screens.map((s) => {
-                          const assigned = container.subscreens?.some(
-                            (sc) => sc.id === s.id
-                          );
-
-                          return (
-                            <button
-                              key={s.id}
-                              onClick={() =>
-                                assigned
-                                  ? unassignSubScreenFromContainer(container.id, s.id)
-                                  : assignSubScreenToContainer(container.id, s.id)
-                              }
-                              className={`px-4 py-2 rounded-lg text-white transition ${
-                                assigned
-                                  ? "bg-red-500 hover:bg-red-600"
-                                  : "bg-blue-500 hover:bg-blue-600"
-                              }`}
+                      {permission === "editor" && (
+                        <>
+                          <p className="text-gray-700 font-medium mt-4">
+                            More Screens (Subscreens):
+                          </p>
+                          {/* <button
+                              // onClick={() => deleteContainer(container.id)}
+                              className="px-4 py-2 rounded-lg bg-green-100 text-green-700 font-semibold hover:bg-green-200"
                             >
-                              {s.name}
-                            </button>
-                          );
-                        })}
-                      </div>
+                              Upload Backgroud 
+                            </button> */}
+
+                          <div className="flex flex-wrap gap-2">
+                            {screens.map((s) => {
+                              const assigned = container.subscreens?.some(
+                                (sc) => sc.id === s.id
+                              );
+
+                              return (
+                                <button
+                                  key={s.id}
+                                  onClick={() =>
+                                    assigned
+                                      ? unassignSubScreenFromContainer(container.id, s.id)
+                                      : assignSubScreenToContainer(container.id, s.id)
+                                  }
+                                  className={`px-4 py-2 rounded-lg text-white transition ${
+                                    assigned
+                                      ? "bg-red-500 hover:bg-red-600"
+                                      : "bg-blue-500 hover:bg-blue-600"
+                                  }`}
+                                >
+                                  {s.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

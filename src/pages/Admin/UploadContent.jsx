@@ -6,7 +6,7 @@ import RichTextEditor from "../Components/RichTextEditor.jsx";
 function UploadContent() {
   const [title, setTitle] = useState("");
   const [dob, setDob] = useState("");
-
+  const permission = sessionStorage.getItem("permission");
   const [content, setContent] = useState("");
   const [contentType, setContentType] = useState("image");
   const [file, setFile] = useState(null);
@@ -56,6 +56,14 @@ function UploadContent() {
     console.log("---------------")
     e.preventDefault();
     setLoading(true);
+
+    if (permission !== "editor") {
+        alert("❌ You do not have permission to create content.");
+        setLoading(false);
+        return;
+    }
+
+
 
     let validationErrors = {};
 
@@ -567,6 +575,7 @@ function UploadContent() {
                   <p className="text-gray-600 text-sm">{sub.description?.slice(0, 50)}...</p>
                 </div>
 
+                {permission === "editor" && (
                 <div className="flex gap-3">
                   <button
                     className="bg-yellow-500 text-white px-4 py-1 rounded"
@@ -582,6 +591,7 @@ function UploadContent() {
                     Delete
                   </button>
                 </div>
+                )}
               </li>
             ))}
           </ul>

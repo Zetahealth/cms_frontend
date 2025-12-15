@@ -10,6 +10,7 @@ function Screens() {
   const [contentType, setContentType] = useState("image");
   const token = sessionStorage.getItem("authToken");
   const role = sessionStorage.getItem("role");
+  const permission = sessionStorage.getItem("permission");
   const [screenName, setScreenName] = useState("");
   const [assignments, setAssignments] = useState({}); // {screenId: [contents]}
   const [displayMode, setDisplayMode] = useState("normal-view");
@@ -189,6 +190,11 @@ function Screens() {
 
     async function createScreen(e) {
         e.preventDefault();
+
+        if (permission !== "editor") {
+            alert("❌ You do not have permission to create screens.");
+            return;
+        }
 
         let validationErrors = {};
 
@@ -513,38 +519,41 @@ function Screens() {
                         </span>
                         </div>
 
-                        <div className="flex gap-2">
-                        <button
-                            onClick={() => deleteScreen(s.id)}
-                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200"
-                        >
-                            Delete
-                        </button>
-                        <button
-                        onClick={() => {
-                            setEditScreen(s);
-                            setEditName(s.name);
-                            setEditTitle(s.title);
-                            setEditMode(s.display_mode);
-                            setEditPopup(true);
-                        }}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg transition duration-200"
-                        >
-                        Edit
-                        </button>
 
-
-
-                        <button
+                        {permission === "editor" && (
+                            <div className="flex gap-2">
+                            <button
+                                onClick={() => deleteScreen(s.id)}
+                                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200"
+                            >
+                                Delete
+                            </button>
+                            <button
                             onClick={() => {
-                            setSelectedScreen(s);
-                            setShowPopup(true);
+                                setEditScreen(s);
+                                setEditName(s.name);
+                                setEditTitle(s.title);
+                                setEditMode(s.display_mode);
+                                setEditPopup(true);
                             }}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                        >
-                            Upload Background
-                        </button>
-                        </div>
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg transition duration-200"
+                            >
+                            Edit
+                            </button>
+
+
+
+                            <button
+                                onClick={() => {
+                                setSelectedScreen(s);
+                                setShowPopup(true);
+                                }}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                            >
+                                Upload Background
+                            </button>
+                            </div>
+                        )}
                     </li>
                     ))}
                 </ul>

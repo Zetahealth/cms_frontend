@@ -70,7 +70,8 @@ export default function Login() {
         // }
         console.log("User role:", data.user.role);
         sessionStorage.setItem("role", data.user.role); // ✅ also store role in sessionStorage
-
+        sessionStorage.setItem("permission", data.user.permission); // ✅ also store permission in sessionStorage
+        console.log("User permission:", data.user.permission);
         alert("Login successful!");
 
         // Navigate based on role
