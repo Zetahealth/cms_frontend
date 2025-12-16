@@ -1110,6 +1110,19 @@ function ScreenView() {
       >
         {/* Dark overlay (adjust opacity as needed) */}
         <div className="absolute inset-0 bg-black/30" />
+        <div
+          className="absolute top-4 left-4 z-[999] cursor-pointer 
+             bg-black/30 backdrop-blur-md p-2 rounded-xl 
+             hover:bg-black/50 transition"
+          onClick={() => {
+            window.history.back();          // go to previous page
+            setTimeout(() => {
+              window.location.reload();     // refresh it after navigation
+            }, 100); // small delay so browser can go back first
+          }}
+        >
+          <span className="text-white text-2xl leading-none">Back</span>
+        </div>
 
         {/* === LEFT SLANTED IMAGE PANEL (ANIMATED) === */}
         <motion.div
@@ -1133,11 +1146,16 @@ function ScreenView() {
               <div className="grid">
                 <img
                   src={selected.logo}
-                  className="w-32 h-32 md:w-42 md:h-42 drop-shadow-2xl"
+                  className={`
+                              w-32 h-32 md:w-42 md:h-42 drop-shadow-2xl
+                              ${selected.title === "AIR FORCE" ? "ml-12" : ""}
+                            `}
                   alt="Logo"
                 />
-                <h1 className="text-3xl font-bold mb-6">{selected.title}</h1>
+
+                <h1 className="text-2xl font-bold mb-6">{selected.title}</h1>
               </div>
+
             </div>
           )}
         </motion.div>
@@ -1543,42 +1561,51 @@ function ScreenView() {
             w-full max-w-6xl 
             bg-black/70 border border-white/10 
             rounded-3xl shadow-2xl
-            p-10
-            mt-10
+            p-4
+           
             flex flex-col
             items-center
           "
         >
           {/* BACK BUTTON */}
-          <div
-            onClick={() => setGalleryOpen(false)}
-            className="cursor-pointer flex items-center gap-3 mb-4 self-start"
-          >
-            <span className="text-white text-2xl font-bold drop-shadow">←</span>
-            <p className="text-xl font-bold drop-shadow">BACK</p>
+          <div className="grid grid-cols-3 items-center">
+
+            {/* BACK BUTTON (Left aligned) */}
+            <div
+              onClick={() => setGalleryOpen(false)}
+              className="cursor-pointer flex items-center gap-3 mb-4 justify-start"
+            >
+              <span className="text-white text-2xl font-bold drop-shadow">←</span>
+              <p className="text-xl font-bold drop-shadow">BACK</p>
+            </div>
+
+            {/* CENTER TITLE */}
+            <h1 className="text-2xl md:text-2xl font-bold text-center mb-8">
+              View Gallery
+            </h1>
+
+            {/* EMPTY RIGHT SIDE — to keep the title perfectly centered */}
+            <div></div>
           </div>
 
-          {/* TITLE */}
-          <h1 className="text-2xl md:text-2xl font-bold text-center mb-8">
-            View Gallery
-          </h1>
 
           {/* SCROLLABLE GRID */}
           <div
             className="
-              grid 
-              grid-cols-1 
-              sm:grid-cols-2 
-              md:grid-cols-3 
-              gap-8
-              w-full
-              overflow-y-auto
-              pr-3
-            "
-            style={{ maxHeight: "65vh" }}
+                      grid 
+                      grid-cols-1 
+                      sm:grid-cols-2 
+                      md:grid-cols-3 
+                      gap-4
+                      w-full
+                      overflow-y-auto
+                      pr-3
+                      hide-scrollbar
+                    "
+            style={{ maxHeight: "75vh" }}
           >
             {mediaFiles.map((file, i) => (
-              <div key={i} className="w-full h-60 md:h-64 rounded-xl shadow-xl overflow-hidden border border-white/20">
+              <div key={i} className="w-full h-60 md:h-64 shadow-xl overflow-hidden border border-white/20">
 
                 {/* If video → render video */}
                 {isVideo(file) ? (
@@ -1593,7 +1620,7 @@ function ScreenView() {
                   /* Else show image */
                   <img
                     src={file}
-                    className="w-full h-full object-cover rounded-xl"
+                    className="w-full h-full object-cover"
                     alt=""
                   />
                 )}
@@ -1610,37 +1637,27 @@ function ScreenView() {
   // =============================================================
 
   const PresentationShowcaseView = () => {
-
     // SLIDE NAVIGATION
     const prev = () =>
       setActiveIndex((prev) => (prev === 0 ? contents.length - 1 : prev - 1));
-
     const next = () =>
-      setActiveIndex((prev) =>
-        prev === contents.length - 1 ? 0 : prev + 1
-      );
+      setActiveIndex((prev) => (prev === contents.length - 1 ? 0 : prev + 1));
 
-    // FIXED: Circular Position Logic
+    // EXTENDED: Circular Position Logic (supports left3 / right3)
     const getPosition = (index) => {
-      const last = contents.length - 1;
+      const total = contents.length;
+      if (total === 0) return "hidden";
 
-      if (index === activeIndex) return "center";
+      const diff = (index - activeIndex + total) % total;
 
-      // LEFT (previous)
-      if (
-        index === activeIndex - 1 ||
-        (activeIndex === 0 && index === last)
-      ) {
-        return "left";
-      }
+      if (diff === 0) return "center";
+      if (diff === 1) return "right";
+      if (diff === 2) return "right2";
+      if (diff === 3) return "right3";
 
-      // RIGHT (next)
-      if (
-        index === activeIndex + 1 ||
-        (activeIndex === last && index === 0)
-      ) {
-        return "right";
-      }
+      if (diff === total - 1) return "left";
+      if (diff === total - 2) return "left2";
+      if (diff === total - 3) return "left3";
 
       return "hidden";
     };
@@ -1665,7 +1682,7 @@ function ScreenView() {
           }}
         >
           <img
-            src={active.logo || containerLogo}
+            src={active?.logo || containerLogo}
             alt="logo"
             className="h-20 sm:h-24 md:h-38 lg:h-48 w-auto object-contain"
           />
@@ -1673,83 +1690,136 @@ function ScreenView() {
 
         {/* SLIDER */}
         <div className="relative w-full h-[60%] sm:h-[65%] md:h-[70%] flex items-center justify-center">
-
           {contents.map((c, index) => {
             const pos = getPosition(index);
 
-            // BASE STYLE
+            // BASE STYLE (common)
             let style = {
               position: "absolute",
-              width: "80vw",
-              maxWidth: "400px",
-              height: "55vh",
-              maxHeight: "680px",
-              borderRadius: "12px",
+
               overflow: "hidden",
               transition: "all 0.6s ease",
               opacity: 0.3,
               zIndex: 10,
               filter: "grayscale(40%)",
+              display: "none",
             };
 
-            const mobileOffset = "42vw";
-            const desktopOffset = "460px";
-            const offset = window.innerWidth < 768 ? mobileOffset : desktopOffset;
+            // Offsets and sizes
+            const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+            const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
 
-            // ACTIVE SLIDE
+            // size choices
+            const centerWidth = isMobile ? "86vw" : "24vw";
+            const centerHeight = isMobile ? "56vh" : "60vh";
+            const sideWidth = isMobile ? "28vw" : "180px";
+            const sideHeight = isMobile ? "36vh" : "42vh";
+
+            // helper: convert css value (vw/px) to px
+            const toPx = (css) => {
+              if (!css) return 200;
+              if (typeof css !== "string") return Number(css) || 200;
+              if (css.endsWith("vw")) return (parseFloat(css) / 100) * vw;
+              if (css.endsWith("px")) return parseFloat(css);
+              return parseFloat(css) || 200;
+            };
+
+            const applyStyle = (multiplier, widthCss, heightCss, scaleVal, opacityVal, z) => {
+              const centerPx = toPx(centerWidth);
+              const sidePx = toPx(sideWidth);
+
+              // Minimum gap required to avoid overlap
+              const base = Math.ceil(centerPx / 2 + sidePx / 2);
+
+              // Your custom spacing rules
+              let extra = 0;
+
+              if (Math.abs(multiplier) === 1) extra = 5;        // first layer
+              if (Math.abs(multiplier) === 2) extra = -90; // second layer
+              if (Math.abs(multiplier) === 3) extra = -200;     // third layer
+
+              // Final offset calculation
+              const offsetPx = multiplier * base + Math.sign(multiplier) * extra;
+
+              style.display = "block";
+              style.left = "50%";
+              style.width = widthCss;
+              style.height = heightCss;
+              style.transform = `translateX(${offsetPx}px) translateX(-50%) scale(${scaleVal})`;
+              style.opacity = opacityVal;
+              style.zIndex = z;
+            };
+
+            // POSITION LOGIC with improved spacing and sizes
             if (pos === "center") {
-              style.transform = "scale(1)";
-              style.opacity = 1;
-              style.zIndex = 40;
+              applyStyle(0, centerWidth, centerHeight, 1, 1, 60);
               style.filter = "grayscale(0%)";
-            }
-
-            // LEFT SLIDE
-            if (pos === "left") {
-              style.transform = `translateX(-${offset}) scale(0.85)`;
-              style.opacity = 0.5;
-              style.zIndex = 20;
-            }
-
-            // RIGHT SLIDE
-            if (pos === "right") {
-              style.transform = `translateX(${offset}) scale(0.85)`;
-              style.opacity = 0.5;
-              style.zIndex = 20;
-            }
-
-            // HIDDEN SLIDE
-            if (pos === "hidden") {
+            } else if (pos === "left") {
+              applyStyle(-1, sideWidth, sideHeight, 0.88, 1, 50);
+            } else if (pos === "right") {
+              applyStyle(1, sideWidth, sideHeight, 0.88, 1, 50);
+            } else if (pos === "left2") {
+              applyStyle(-2, sideWidth, sideHeight, 0.82, 0.95, 40);
+            } else if (pos === "right2") {
+              applyStyle(2, sideWidth, sideHeight, 0.82, 0.95, 40);
+            } else if (pos === "left3") {
+              applyStyle(-3, sideWidth, sideHeight, 0.78, 0.85, 30);
+            } else if (pos === "right3") {
+              applyStyle(3, sideWidth, sideHeight, 0.78, 0.85, 30);
+            } else if (pos === "hidden") {
+              style.display = "none";
               style.opacity = 0;
               style.zIndex = 5;
             }
 
             // CLICK HANDLER
             const handleClick = () => {
-              if (pos === "left") prev();
-              else if (pos === "right") next();
+              if (pos.startsWith("left")) prev();
+              else if (pos.startsWith("right")) next();
               else if (pos === "center") {
                 setSelected(c);
                 if (c.has_subcontent) setMode("slider-thumb");
               }
             };
 
-            return (
-              <motion.div key={index} style={style} onClick={handleClick}>
-                {c.files?.[0] ? (
-                  <img
-                    src={c.files[0]}
-                    className="w-full h-full object-cover bg-black/5"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full bg-black/70 text-white">
-                    No Image
-                  </div>
-                )}
+            // guard image src (avoid empty string causing warning)
+            const imgSrc =
+              c?.files?.[0] && typeof c.files[0] === "string" && c.files[0].trim() !== ""
+                ? c.files[0]
+                : null;
 
-                {/* TITLE ONLY FOR CENTER SLIDE */}
+            return (
+              <>
+                <motion.div
+                  key={c.id ?? index}
+                  style={style}
+                  onClick={handleClick}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: style.opacity, transform: style.transform }}
+                  transition={{ duration: 0.55 }}
+                >
+                  {imgSrc ? (
+                    <img
+                      src={imgSrc}
+                      className="w-full h-full object-cover bg-black/5"
+                      alt={c.title || "slide image"}
+                      style={{
+                        objectPosition: "center center",
+                        display: "block",
+                        height: "100%",
+                        width: "100%",
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full bg-black/70 text-white">
+                      No Image
+                    </div>
+                  )}
+                </motion.div>
+
+                {/* ⭐ TITLE RENDERED OUTSIDE THE MOTION.DIV */}
                 {pos === "center" && (
-                  <div className="absolute bottom-3 w-full text-center">
+                  <div className="absolute -bottom-14 w-full text-center">
                     <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-xl">
                       {c.title}
                     </h2>
@@ -1758,16 +1828,14 @@ function ScreenView() {
                     </h4>
                   </div>
                 )}
-
-              </motion.div>
+              </>
             );
-          })}
 
+          })}
         </div>
       </div>
     );
   };
-
 
 
   const SliderThumbnailGalleryView = () => {
@@ -1793,14 +1861,25 @@ function ScreenView() {
         {/* DARK BACKGROUND OVERLAY */}
         <div className="absolute inset-0 bg-black/35 backdrop-blur-[3px]"></div>
 
+        <div
+          className="absolute top-4 left-4 z-[999] cursor-pointer 
+             bg-black/30 backdrop-blur-md p-2 rounded-xl 
+             hover:bg-black/50 transition"
+          onClick={() => setMode("slider-thumbnail-view")}
+        >
+          <span className="text-white text-2xl leading-none">Back</span>
+        </div>
+
+
+
         {/* TOP RIGHT LOGO */}
         <div
-          className="absolute top-4 right-4 cursor-pointer z-[999]"
+          className="absolute top-6 right-8 cursor-pointer z-[999]"
           onClick={() => setMode("slider-thumbnail-view")}
         >
           <img
             src={selected.logo || containerLogo}
-            className="h-16 md:h-32 object-contain drop-shadow-xl"
+            className="h-16 md:h-40 object-contain drop-shadow-xl"
             alt="logo"
           />
         </div>
@@ -1809,109 +1888,104 @@ function ScreenView() {
         <div
           className="
             relative z-20
-            grid grid-cols-1 md:grid-cols-2
-            gap-10 md:gap-16
-            px-6 md:px-16 lg:px-24
-            pt-24 md:pt-32
-            pb-10
+            flex flex-row
+            px-4 md:px-12
+            pt-12 md:pt-20
           "
         >
           {/* LEFT LARGE IMAGE (with nice border and shadow) */}
           <div
             className="
-              w-full 
-              h-[55vh] md:h-[65vh]
+              basis-[30%] 
+              shrink-0
+              max-w-[30%]
               rounded-xl shadow-2xl 
-              border-[6px] border-white/20
               overflow-hidden
-              bg-black/40
-              flex items-center justify-center
+              flex z-30
             "
           >
             <img
               src={activeImage}
               alt="Portrait"
-              className="max-h-full max-w-full object-contain rounded-md"
+              className="h-[75vh] max-w-full object-fill rounded-md !border-none !shadow-none !outline-none"
             />
+
           </div>
 
 
           {/* RIGHT TEXT BOX */}
-          <div
-            className="
-              bg-black/45 backdrop-blur-md
-              p-6 md:p-10 lg:p-14
-              rounded-xl shadow-2xl 
-              text-white 
-              flex flex-col justify-start
-            "
-          >
-            {/* NAME */}
-            <h1 className="text-2xl md:text-3xl font-bold leading-tight mb-3">
-              {selected.title} ({selected.dob})
-            </h1>
-
-            {/* SECOND LINE (subtitle or role) */}
-            <h2 className="text-lg md:text-xl opacity-90 mb-6">
-              {selected.sub_contents?.[0]?.individual_contents ||
-                " "}
-            </h2>
-
-
-            {/* FULL DESCRIPTION */}
-            {/* <p className="text-md md:text-xl leading-relaxed opacity-95 whitespace-pre-line">
-              {selected.sub_contents?.[0]?.description}
-            </p> */}
+          <div className="basis-[70%] max-w-[70%] shrink-0">
             <div
-              className="user-content"
-              dangerouslySetInnerHTML={{ __html: selected.sub_contents?.[0]?.description }}
-            ></div>
-          </div>
+              className="
+                        relative          /* important so QR can be absolute inside */
+                        bg-black/15 backdrop-blur-lg
+                        mt-8
+                        px-6 lg:pt-4
+                        rounded-xl shadow-2xl 
+                        text-white 
+                        flex-none relative -ml-12           
+                          "
+            >
+              <div className="min-h-[50vh] pl-12 pb-40 relative">
+                {/* NAME */}
+                <h1 className="mb-3 !text-3xl opacity-90">
+                  {selected.title} ({selected.dob})
+                </h1>
 
-          {/* QR CODE – FIXED BOTTOM RIGHT */}
-          {selected.qr_code_url && (
-            <div className="absolute bottom-6 right-6 flex flex-col items-center z-30">
-              <img
-                src={selected.qr_code_url}
-                className="w-24 h-24 md:w-40 md:h-40 bg-white p-2 rounded-xl shadow-xl"
-                alt="QR Code"
-              />
-              <span className="text-white mt-2 text-lg font-semibold drop-shadow">
-                Learn More
-              </span>
+                <h2 className="text-lg md:text-2xl opacity-90 mb-6">
+                  {selected.sub_contents?.[0]?.individual_contents || " "}
+                </h2>
+
+                <SplitByLines
+                  html={selected.sub_contents?.[0]?.description || selected.description || ""}
+                  lines={6}
+                />
+
+                {selected.qr_code_url && (
+                  <div className="absolute bottom-0 right-8 flex flex-col items-center pb-4 mt-8">
+                    <div className="w-32 h-32 p-2 overflow-hidden rounded-sm">
+                      <img
+                        src={selected.qr_code_url}
+                        className="w-full h-full object-cover scale-[1.4]"
+                        alt="QR"
+                      />
+                    </div>
+                    <span className="mt-2 font-semibold">Learn More</span>
+                  </div>
+                )}
+              </div>
+
             </div>
-          )}
-        </div>
 
-
-
-        {/* ==== THUMBNAILS ==== */}
-        <div
-          className="
+            {/* ==== THUMBNAILS ==== */}
+            <div
+              className="
             relative z-30
             w-full
-            bg-black/60 backdrop-blur-lg
+            bg-black/30 backdrop-blur-lg
             border-t border-white/20
             py-3 md:py-4 px-4
             flex gap-4 overflow-x-auto
           "
-        >
-          {images.map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              onClick={() => setActiveIndex(i)}
-              className={`
-                h-20 w-24 md:h-28 md:w-32 rounded-lg cursor-pointer object-cover
+            >
+              {images.map((img, i) => (
+                <img
+                  key={i}
+                  src={img}
+                  onClick={() => setActiveIndex(i)}
+                  className={`
+                h-20 w-24 md:h-40 md:w-32 rounded-lg cursor-pointer object-cover
                 border-2 transition-all duration-200
                 ${activeIndex === i
-                  ? "border-yellow-400 scale-110 shadow-xl opacity-100"
-                  : "border-white/20 opacity-60 hover:opacity-100"
-                }
+                      ? "border-yellow-400 scale-110 shadow-xl opacity-100"
+                      : "border-white/20 opacity-60 hover:opacity-100"
+                    }
               `}
-              alt="Thumbnail"
-            />
-          ))}
+                  alt="Thumbnail"
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1923,19 +1997,36 @@ function ScreenView() {
     if (!contents || contents.length === 0) return null;
 
     const [activeIndex, setActiveIndex] = useState(0);
+    const currentpage = contents[activeIndex];
 
-    const currentpage = contents[activeIndex]
+    const getBackgroundImage = () => {
+      // 1. Use background_url if available
+      if (currentpage.background_url) {
+        return currentpage.background_url;
+      }
+
+      // 2. If no background_url → use gallery image STRING
+      const galleryImg = currentpage?.sub_contents?.[0]?.gallery_images?.[0];
+
+      if (galleryImg) {
+        return galleryImg; // this is already a full URL string
+      }
+
+      // 3. Fallback
+      return background;
+    };
+
+
     return (
       <div
-        className="relative w-full h-screen flex flex-col items-center justify-center text-white bg-black/30"
+        className="relative w-full h-screen flex flex-col p-6 md:p-24 text-white bg-black/40"
         style={{
-          backgroundImage: `url(${currentpage.background_url || background})`,
+          backgroundImage: `url(${getBackgroundImage()})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          opacity: "10px"
-
         }}
       >
+
         <div className="absolute inset-0 bg-black/40"></div>
         <div
           className="absolute top-4 right-4 cursor-pointer z-[9999]"
@@ -1956,26 +2047,35 @@ function ScreenView() {
         </div>
 
         {/* MAIN CONTAINER */}
-        <div className="relative z-20 w-[80%] flex flex-col items-left mt-10 overflow-y-auto pb-20 gap-10">
+        <div className="relative z-20 w-[80%] flex flex-col items-left overflow-y-auto pt-12 pl-20 gap-10">
           {/* TITLE */}
-          <h1 className="text-2xl md:text-4xl font-bold mb-3 drop-shadow-lg text-left">
+          <h1 className="
+                        !text-2xl md:!text-3xl 
+                        !font-bold 
+                        text-white 
+                        drop-shadow-[0_4px_6px_rgba(0,0,0,0.9)]
+                        tracking-wide
+                        
+                      ">
             Articles and News/Blogs
           </h1>
+
+
 
           <div
 
             className="
-                w-[90%] md:w-[85%] lg:w-[75%]
-                bg-black/30 backdrop-blur-md 
+                w-[90%] md:w-[85%] lg:w-[90%]
+                bg-black/20 
                 rounded-3xl shadow-2xl p-6 md:p-10
                 flex flex-col md:flex-row gap-8
               "
           >
 
-            {/* RIGHT CONTENT AREA */}
-            <div className="w-full flex flex-col justify-between">
+
+            <div className="w-full flex flex-col justify-between pb-20">
               {/* SUB TITLE */}
-              <h2 className="text-lg md:text-2xl font-semibold mb-4 opacity-90 text-left">
+              <h2 className="text-lg !md:text-xl font-semibold mb-4 opacity-80 text-left">
                 {currentpage.title || ""}
               </h2>
 
@@ -1984,7 +2084,7 @@ function ScreenView() {
                   {currentpage.content || "No Description"}
                 </p> */}
               <div
-                className="user-content"
+                className="user-content opacity-80"
                 dangerouslySetInnerHTML={{ __html: currentpage.content }}
               ></div>
 
@@ -1992,36 +2092,42 @@ function ScreenView() {
             </div>
           </div>
 
-          {/* BUTTON BOTTOM LEFT */}
-          <div className="mt-6 text-left align-start">
-            <button
-              onClick={() => {
 
-                console.log("888888888-------currentpage-------------8888888888888", currentpage)
-                setMode("detail-article-view");
-                setSelected(currentpage);
-              }}
-              className="
-                  px-8 py-3
-                  bg-green-800/80 
-                  hover:bg-green-900 
-                  text-white 
-                  text-lg md:text-xl 
-                  rounded-xl 
-                  shadow-lg 
-                  transition-all
-                "
-            >
-              LEARN MORE
-            </button>
-          </div>
 
 
         </div>
+        {/* BUTTON BOTTOM LEFT */}
+        <div className=" absolute bottom-24 md:bottom-24 left-8 md:left-44 mt-6 text-left align-start ">
+          <button
+            onClick={() => {
 
+              console.log("888888888-------currentpage-------------8888888888888", currentpage)
+              setMode("detail-article-view");
+              setSelected(currentpage);
+            }}
+            className="
+              
+                  px-8 py-3
+                  bg-green-800/80 
+                  hover:[#374534] 
+                  text-white 
+                  text-lg md:text-xl 
+                  
+                  shadow-lg 
+                  transition-all
+                "
+          >
+            LEARN MORE
+          </button>
+        </div>
         {/* PAGE INDICATOR */}
-        <div className="absolute bottom-6 flex items-center gap-6 text-white opacity-90 z-30">
-
+        <div
+          className="
+    absolute bottom-6 left-1/2 -translate-x-1/2
+    flex items-center justify-center gap-6
+    text-white opacity-90 z-30
+  "
+        >
           {/* LEFT ARROW */}
           <div
             className="text-3xl cursor-pointer hover:scale-110"
@@ -2036,11 +2142,7 @@ function ScreenView() {
 
           {/* PAGE NUMBER */}
           <div
-            className="
-              bg-white text-black
-              px-6 py-2 rounded-xl 
-              shadow-lg
-            "
+            className="bg-white text-black px-12 py-2  shadow-lg"
           >
             Page {activeIndex + 1}
           </div>
@@ -2058,6 +2160,7 @@ function ScreenView() {
           </div>
         </div>
 
+
       </div>
     );
   };
@@ -2073,7 +2176,7 @@ function ScreenView() {
 
     return (
       <div
-        className="relative w-full h-screen flex items-center justify-center text-white px-6 md:px-16"
+        className="relative w-full h-screen flex items-center justify-center text-white px-6 md:px-8"
         style={{
           background: "linear-gradient(to bottom, #C3B79B, #A79A7D, #584C3F)",
           backgroundSize: "cover",
@@ -2082,10 +2185,20 @@ function ScreenView() {
       >
         {/* DARK OVERLAY */}
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div
+          className="absolute top-4 left-4 z-[999] cursor-pointer 
+                    bg-black/30 backdrop-blur-md p-2 rounded-xl 
+                    hover:bg-black/50 transition"
+          onClick={() => {
+            setMode("article-view");   // go back to previous screen mode
+          }}
+        >
+          <span className="text-white text-2xl leading-none">Back</span>
+        </div>
 
         {/* TOP RIGHT LOGO */}
         <div
-          className="absolute top-4 right-4 cursor-pointer z-[999]"
+          className="absolute top-4 right-16 cursor-pointer z-[999]"
           onClick={() => setMode("article-view")}
         >
           <img
@@ -2096,55 +2209,59 @@ function ScreenView() {
         </div>
 
         {/* MAIN CONTENT WRAPPER */}
+        <div className="relative z-20 w-full p-4">
 
+          <h1 className="max-w-2xl !text-3xl md:text-4xl font-bold mb-4 pt-4 leading-tight">
+            {sub.title || ''}
+          </h1>
 
-        {/* MAIN CONTENT WRAPPER */}
-        <div className="relative z-20 w-full max-w-[1400px] flex flex-col md:flex-row gap-10 items-stretch">
+          <div className="relative max-w-8xl flex flex-col md:flex-row gap-4 md:pt-4 items-stretch">
 
-          {/* LEFT SIDE */}
-          <div className="w-full md:w-1/2 flex flex-col bg-black/5 backdrop-blur-md rounded-xl shadow-2xl">
-            <h1 className="text-2xl md:text-4xl font-bold mb-4 leading-tight">
-              {sub.title || ''}
-            </h1>
+            {/* LEFT SIDE */}
+            <div className="w-full md:w-1/2 flex flex-col bg-black/5 backdrop-blur-md rounded-xl shadow-2xl">
+              <div
+                className="w-full h-[40vh] md:h-[60vh] shadow-2xl"
+                style={{
+                  backgroundImage: image ? `url(${image})` : "none",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              ></div>
+            </div>
 
-            <div
-              className="w-full h-[40vh] md:h-[60vh] rounded-xl shadow-2xl"
-              style={{
-                backgroundImage: image ? `url(${image})` : "none",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            ></div>
+            {/* RIGHT SIDE */}
+            <div className="w-full md:w-[55%] flex flex-col justify-between">
+              <div
+                className="user-content bg-black/25 backdrop-blur-md rounded-xl shadow-2xl p-6"
+                dangerouslySetInnerHTML={{ __html: sub.description }}
+              ></div>
+            </div>
+
           </div>
 
-          {/* RIGHT SIDE CONTENT BOX */}
+          {/* ⭐ QR CODE FIXED TO PAGE BOTTOM-RIGHT */}
           <div
             className="
-              w-full md:w-[55%]
-              bg-black/5 backdrop-blur-md
-              p-6 md:p-10
-              rounded-xl shadow-2xl
-              flex flex-col justify-between
-            "
+                      fixed bottom-8 right-12 
+                      flex flex-col items-center md:items-end 
+                      gap-2 z-[9999]
+                    "
           >
-            <div
-              className="user-content"
-              dangerouslySetInnerHTML={{ __html: sub.description }}
-            ></div>
-
-            <div className="flex flex-col items-center md:items-end mt-8 gap-2">
-              {selected.qr_code_url && (
+            {selected.qr_code_url && (
+              <div className="w-32 h-32 p-1 overflow-hidden rounded-sm">
                 <img
                   src={selected.qr_code_url}
-                  className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-xl shadow-xl"
+                  className="w-full h-full object-cover scale-[1.4]"
                   alt="QR"
                 />
-              )}
-            </div>
+              </div>
+            )}
+
+            <span className="text-white font-semibold text-sm md:text-base pr-1">
+              Learn More
+            </span>
           </div>
-
         </div>
-
       </div>
     );
   };
@@ -2272,6 +2389,11 @@ function ScreenView() {
   //     </div>
   //   );
   // };
+  function formatMaterials(content) {
+    if (!content) return "";
+
+    return content.replace(/Materials:/g, "<br/><br/>Materials:");
+  }
 
 
   const WeaponsView = () => {
@@ -2318,70 +2440,64 @@ function ScreenView() {
         {/* MAIN CONTENT GRID */}
         <div
           className="
-            absolute inset-0 z-30 
-            grid grid-cols-1 md:grid-cols-2 
-            gap-6 md:gap-12 
-            px-4 md:px-20 
-            py-20 md:py-28
-          "
+    absolute inset-0 z-30 
+    flex flex-row 
+    gap-6 
+    px-4 md:pr-16 
+    py-12
+  "
         >
-          {/* LEFT IMAGE */}
-          <div className="flex justify-center items-start mt-10 md:mt-0"
+          {/* LEFT IMAGE — 30% WIDTH */}
+          <div
+            className="flex justify-center items-center mt-4 ml-8 mb-16 basis-[25%]"
             onClick={() => {
-              // console.log("888888888-------currentpage-------------8888888888888",currentpage)
               setMode('weapon-detail-view');
               setSelected(currentpage);
             }}
-      
           >
             <img
               src={currentpage.files?.[0]}
               className="
-                w-[85%] md:w-[75%] 
-                max-h-[280px] md:max-h-[500px]
-                object-contain 
-                rounded-2xl shadow-2xl
-              "
+        w-full 
+        max-h-[280px] md:max-h-[800px]
+        object-fill 
+        rounded-2xl shadow-2xl
+      "
               alt="Weapon"
             />
           </div>
 
-          {/* RIGHT TEXT AREA */}
+          {/* RIGHT CONTENT — 70% WIDTH */}
           <div
             className="
-              bg-black/40 backdrop-blur-md
-              rounded-xl shadow-xl 
-              p-5 md:p-10
-              w-full
-            "
+      bg-white/5 backdrop-blur-md
+      rounded-xl shadow-xl 
+      p-5 md:px-10
+      w-full 
+      basis-[75%]
+    "
           >
-            <h1 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6">
+            <h1 className="text-2xl md:text-4xl opacity-90 font-bold mb-4 md:mb-6">
               {currentpage.title}
             </h1>
-
-            {/* <p className="text-sm md:text-lg leading-relaxed whitespace-pre-line">
-              {currentpage.content}
-            </p> */}
-            {/* <div
-              className="text-sm md:text-lg leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: currentpage.content }}
-            ></div> */}
             <div
-              className="user-content"
-              dangerouslySetInnerHTML={{ __html: currentpage.content }}
+              className="user-content opacity-90 text-sm md:text-2xl "
+              dangerouslySetInnerHTML={{ __html: formatMaterials(currentpage.content) }}
             ></div>
-
           </div>
         </div>
 
+
         {/* QR CODE + LEARN MORE — MOBILE RESPONSIVE */}
-        <div className="absolute bottom-28 left-1/2 md:left-16 -translate-x-1/2 md:translate-x-0 flex flex-col items-center z-40">
+        <div className="absolute bottom-2 left-1/2 md:left-40 -translate-x-1/2 md:translate-x-0 flex flex-col items-center z-40">
           {currentpage.qr_code_url && (
-            <img
-              src={currentpage.qr_code_url}
-              className="w-28 h-28 md:w-40 md:h-40 bg-white rounded-xl shadow-xl"
-              alt="QR"
-            />
+            <div className="w-36 h-36 p-1 overflow-hidden rounded-sm">
+              <img
+                src={currentpage.qr_code_url}
+                className="w-full h-full object-cover scale-[1.4]"
+                alt="QR"
+              />
+            </div>
           )}
           <p className="text-white font-semibold text-center mt-2 md:mt-3 text-base md:text-lg">
             Learn More
@@ -2422,7 +2538,7 @@ function ScreenView() {
   const BoloDynamicUI = () => {
 
     const items = selected?.sub_contents[0] || [];
-    console.log("items==================",items)
+    console.log("items==================", items)
     return (
       <div
         className="relative w-full h-[1000px] bg-cover bg-center text-white"
@@ -2431,7 +2547,7 @@ function ScreenView() {
           backgroundSize: "cover",
           backgroundPosition: "center",
         }} // Your wooden BG
-        onClick={()=>{
+        onClick={() => {
           setMode('weapons-view');
         }}
       >
@@ -2450,8 +2566,6 @@ function ScreenView() {
 
   const BranchesShowcaseView = () => {
     if (!contents || contents.length === 0) return null;
-
-
     return (
       <div
         className="relative w-full h-screen flex items-center justify-center overflow-hidden"
@@ -2606,14 +2720,74 @@ function ScreenView() {
 
   const SubContantDetailView = () => {
     if (!selected) return null;
+    const videoRef = useRef(null);
+    const [videoOpen, setVideoOpen] = useState(false);
+    const [activeVideo, setActiveVideo] = useState(null);
+
+    const isVideo = (url = "") =>
+      /\.(mp4|webm|ogg)$/i.test(url);
+
+    const isGif = (url = "") =>
+      /\.gif$/i.test(url);
+
+    const isMediaPlayable = (url = "") =>
+      isVideo(url) || isGif(url);
+
+    useEffect(() => {
+      if (videoOpen && videoRef.current) {
+        videoRef.current.muted = true; // ensure muted
+        videoRef.current.play().catch(() => {
+          // autoplay blocked silently – safe fallback
+        });
+      }
+    }, [videoOpen]);
+
+    const getBranchStylesFromDescription = (description = "") => {
+      const text = description.toLowerCase();
+
+      // NAVY → water / ships
+      if (
+        text.includes("navy") ||
+        text.includes("ship") ||
+        text.includes("boat") ||
+        text.includes("vessel") ||
+        text.includes("patrol")
+      ) {
+        return "bg-blue-200 text-white";
+      }
+
+      // AIR FORCE → air
+      if (
+        text.includes("air force") ||
+        text.includes("aircraft") ||
+        text.includes("jet") ||
+        text.includes("fighter") ||
+        text.includes("helicopter")
+      ) {
+        return "bg-sky-300 text-black";
+      }
+
+      // ARMY → land
+      if (
+        text.includes("army") ||
+        text.includes("artillery") ||
+        text.includes("tank") ||
+        text.includes("infantry")
+      ) {
+        return "bg-yellow-400 text-black";
+      }
+
+      // fallback
+      return "bg-gray-400 text-black";
+    };
 
     return (
       <div
-        className="w-full min-h-screen bg-cover bg-center relative p-4 md:p-10 text-white"
+        className="w-full h-screen bg-cover bg-center relative p-4 md:p-6 text-white"
         style={{ backgroundImage: `url(${selected.files[0]})` }}
       >
 
-        {/* BACK IMAGE BUTTON */}
+        {/* BACK BUTTON */}
         <div
           onClick={() => setMode("subcontent-view")}
           className="
@@ -2632,122 +2806,180 @@ function ScreenView() {
           />
         </div>
 
-
         {/* TITLE */}
-        <div className="flex justify-center mb-6 md:mb-10 px-2 slide-up z-[9999]">
-          <div className="bg-yellow-400 text-black px-6 md:px-10 py-3 md:py-4 rounded-xl shadow-xl 
-                          text-xl md:text-3xl font-bold text-center">
-            {subselected.title}
+        <div className="flex justify-center mb-6 md:mb-6 px-2 pt-4 slide-up z-[9999]">
+          <div
+            className={`px-6 md:px-10 py-3 md:py-4 rounded-xl shadow-xl 
+    text-xl md:text-3xl font-bold text-center
+    ${getBranchStylesFromDescription(subselected?.description)}`}
+          >
+            {subselected?.title}
           </div>
+
+
         </div>
 
         {/* LOGO */}
         <div
           className="absolute top-2 md:top-4 right-2 md:right-4 cursor-pointer"
           onClick={() => {
-            console.log("morepage:", morepage);
             if (morepage) {
               navigate(`/container/${container}/more`);
             } else {
               navigate(`/container/${container}`);
             }
 
-
           }}
         >
           <img
             src={containerLogo}
             alt="logo"
-            className="h-20 w-auto md:h-40 object-contain"
+            className="h-20 w-auto md:h-32 mr-12 object-contain"
           />
         </div>
 
         {/* CENTER PANEL */}
         <div
           className="
-            absolute left-1/2 w-[95%] sm:w-[90%] md:w-[80%] max-w-7xl
-            bg-white/20 backdrop-blur-xl p-6 md:p-12 rounded-3xl shadow-2xl
-            transform -translate-x-1/2
-            top-[22%] sm:top-[20%] md:top-[15%]   /* ✅ FIX: added more spacing */
+            absolute left-1/2 w-[95%] sm:w-[90%] md:w-[90%] max-w-8xl
+            bg-white/10 backdrop-blur-sm py-12 rounded-3xl shadow-3xl
+            transform -translate-x-1/2 
+            top-[22%] sm:top-[20%] md:top-[22%]   /* ✅ FIX: added more spacing */
             z-[50]
           "
         >
 
 
           {/* MAIN CONTENT BLOCK */}
-          <div className="flex flex-col md:flex-row gap-6 md:gap-12 pb-16 md:pb-24 px-2 md:px-6">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-12   px-2 md:px-12">
 
             {/* LEFT IMAGE */}
-            <div className="w-full md:w-[60%] flex flex-col items-center gap-4 md:gap-6">
-
+            <div className="w-full md:w-[42%] h-[450px] flex flex-col items-center gap-4 md:gap-6">
               <img
-                src={subselected.gallery_images[0]}
-                className="w-full max-w-2xl md:max-w-1/2 rounded-2xl shadow-xl"
+                src={subselected.main_image || subselected.gallery_images?.[0]}
+                className="w-full h-[400px] object-fill rounded-2xl shadow-xl cursor-pointer"
                 alt=""
+                onClick={() => {
+                  if (isMediaPlayable(subselected.sub_image)) {
+                    setActiveVideo(subselected.sub_image);
+                    setVideoOpen(true);
+                  }
+                }}
+
               />
-
               {/* View Gallery */}
-
-              <button
-                onClick={() =>
-                  SetSubgalleryOpen(true)
-
-                }
-                className="w-full max-w-2xl bg-white/30 backdrop-blur-lg text-white
-                            font-semibold text-lg md:text-xl py-3 md:py-4 
-                            rounded-xl shadow-lg border border-white/40"
-              >
-                View Gallery
-              </button>
-
-
+              {selected.has_subcontent && (
+                <button
+                  onClick={() => setGalleryOpen(true)}
+                  className="w-full max-w-2xl  text-white
+                              font-semibold text-lg md:text-xl py-3 md:py-4 
+                              rounded-xl bg-transprent backdrop-blur-3xl shadow-3xl cursor-pointer"
+                >
+                  View Gallery
+                </button>
+              )}
             </div>
 
             {/* RIGHT TEXT */}
-            <div className="w-full md:w-[50%] text-base md:text-xl leading-relaxed">
-
-              {showFullText ? (
-                <>
-                  {subselected.description}
-                  <button
-                    onClick={() => setShowFullText(false)}
-                    className="text-yellow-300 font-bold ml-2 underline"
-                  >
-                    Show less
-                  </button>
-                </>
-              ) : (
-                <>
-                  {trimWords(subselected.description, 60)}
-                  <button
-                    onClick={() => setShowFullText(true)}
-                    className="text-yellow-300 font-bold ml-2 underline"
-                  >
-                    Show more
-                  </button>
-                </>
+            <div className="w-full md:w-[90%] text-base md:text-2xl leading-relaxed relative">
+              <div className="flex flex-col md:flex-row items-start gap-4">
+                <div className="flex-1">
+                  <SplitByLines
+                    html={subselected?.description}
+                    lines={6}
+                  />
+                </div>
+              </div>
+              {/* QR CODE */}
+              {selected.qr_code_url && (
+                <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 flex flex-col items-center">
+                  <img
+                    src={selected.qr_code_url}
+                    className="w-28 h-28 md:w-44 md:h-44 bg-white p-2 md:p-3 rounded-xl shadow-xl"
+                    alt="QR"
+                  />
+                  <span className="mt-2 text-white font-semibold text-sm md:text-base">
+                    Learn More
+                  </span>
+                </div>
               )}
-
             </div>
+          </div>
+        </div>
 
+        {videoOpen && (
+          <div className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-md flex items-center justify-center px-4">
+            <div className="relative max-w-[90vw] max-h-[90vh] bg-black rounded-2xl shadow-2xl p-2">
+
+              {/* Close */}
+              <button
+                onClick={() => {
+                  if (videoRef.current) {
+                    videoRef.current.pause();
+                    videoRef.current.currentTime = 0;
+                  }
+                  setVideoOpen(false);
+                  setActiveVideo(null);
+                }}
+                className="absolute -top-4 -right-4 z-50 bg-black/70 text-white 
+             w-9 h-9 rounded-full flex items-center justify-center
+             hover:bg-black cursor-pointer"
+              >
+                ✕
+              </button>
+
+              {/* Video wrapper (important for overlay positioning) */}
+              <div className="relative inline-block">
+                {isVideo(activeVideo) ? (
+                  <video
+                    ref={videoRef}
+                    src={activeVideo}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    disablePictureInPicture
+                    controls={false}
+                    className="max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain"
+                  />
+                ) : (
+                  <img
+                    key={activeVideo}   // 🔥 VERY IMPORTANT
+                    src={activeVideo}
+                    alt="GIF"
+                    loading="eager"
+                    decoding="sync"
+                    className="max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain"
+                  />
+
+                )}
+
+
+
+                {/* 🔥 Title overlay – bottom right */}
+                {subselected?.title && (
+                  <div
+                    className="absolute bottom-3 right-3 
+                     bg-black/60 backdrop-blur-md
+                     text-white text-sm md:text-lg font-semibold
+                     px-3 py-1.5 rounded-lg shadow-lg"
+                  >
+                    {subselected.title}
+                  </div>
+                )}
+              </div>
+
+              {/* Optional description */}
+              {subselected?.individual_contents && (
+                <div className="mt-3 text-white text-sm md:text-base text-center">
+                  {subselected.individual_contents}
+                </div>
+              )}
+            </div>
           </div>
 
+        )}
 
-          {/* QR CODE */}
-          {selected.qr_code_url && (
-            <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 flex flex-col items-center">
-              <img
-                src={selected.qr_code_url}
-                className="w-28 h-28 md:w-44 md:h-44 bg-white p-2 md:p-3 rounded-xl shadow-xl"
-                alt="QR"
-              />
-              <span className="mt-2 text-white font-semibold text-sm md:text-base">
-                Learn More
-              </span>
-            </div>
-          )}
-
-        </div>
       </div>
     );
   };
