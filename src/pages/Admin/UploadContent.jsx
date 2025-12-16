@@ -201,7 +201,7 @@ function UploadContent() {
   const FIELD_CONFIG = {
     "normal-view": ["title", "content", "contentType", "position", "hyperlink", "transition", "logo", "files"],
     
-    "thumbnail-gallery": ["title", "files"],
+    "thumbnail-gallery": ["title", "content","files"],
     
     "slide-view": ["title", "content", "files","background contant" , "hyperlink"],
     

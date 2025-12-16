@@ -819,8 +819,7 @@ function ScreenView() {
           backgroundPosition: "center",
         }}
       >
-
-        {/* ===== TOP RIGHT LOGO (Responsive size) ===== */}
+        {/* ===== TOP RIGHT LOGO ===== */}
         <div
           className="absolute top-3 right-3 cursor-pointer z-[9999]"
           onClick={() => {
@@ -829,7 +828,6 @@ function ScreenView() {
             } else {
               navigate(`/container/${container}`);
             }
-
           }}
         >
           <img
@@ -839,16 +837,17 @@ function ScreenView() {
           />
         </div>
 
-        {/* ===== MAIN LAYOUT GRID ===== */}
-        <div className="
-          flex-grow 
-          grid grid-cols-1 md:grid-cols-2 
-          gap-6 md:gap-10 
-          px-4 md:px-12 
-          pt-20 md:pt-28
-        ">
-
-          {/* ===== LEFT FULL IMAGE ===== */}
+        {/* ===== MAIN GRID ===== */}
+        <div
+          className="
+            flex-grow 
+            grid grid-cols-1 md:grid-cols-2 
+            gap-6 md:gap-10 
+            px-4 md:px-12 
+            pt-20 md:pt-28
+          "
+        >
+          {/* ===== LEFT IMAGE ===== */}
           <div
             className="
               w-full 
@@ -857,59 +856,46 @@ function ScreenView() {
               border border-white/10
             "
             style={{
-              backgroundImage: `url(${active.files[0]})`,
+              backgroundImage: `url(${active?.files?.[0]})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
-          ></div>
+          />
 
-          {/* ===== RIGHT TEXT BLOCK ===== */}
+          {/* ===== RIGHT TEXT ===== */}
           <div className="flex flex-col justify-start items-start">
+            <div
+              className="
+                bg-black/35 backdrop-blur-sm 
+                p-5 md:p-10 lg:p-16 
+                rounded-xl 
+                w-full max-w-4xl 
+                shadow-xl
+              "
+            >
+              {/* ===== HTML CONTENT ===== */}
+              <div
+                className={`
+                  text-xl leading-relaxed whitespace-pre-line text-justify text-white
+                  transition-all duration-300
+                  ${showFullText ? "" : "max-h-[200px] md:max-h-[260px] overflow-hidden"}
+                `}
+                dangerouslySetInnerHTML={{ __html: active?.content }}
+              />
 
-            <div className="
-              bg-black/35 backdrop-blur-sm 
-              p-5 md:p-10 lg:p-16 
-              rounded-xl 
-              w-full max-w-4xl 
-              shadow-xl
-            ">
-
-              {!showFullText ? (
-                <>
-                  <p className="text-white text-xl md:text-2xl lg:text-3xl leading-relaxed">
-                    {limitWords(active?.content, 100)}
-                  </p>
-
-                  {active?.content?.split(" ").length > 100 && (
-                    <button
-                      onClick={() => setShowFullText(true)}
-                      className="mt-3 text-yellow-300 font-semibold underline"
-                    >
-                      Read More
-                    </button>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="max-h-[300px] md:max-h-[400px] overflow-y-auto pr-2">
-                    <p className="text-white text-xl md:text-2xl lg:text-3xl leading-relaxed">
-                      {active?.content}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() => setShowFullText(false)}
-                    className="mt-3 text-yellow-300 font-semibold underline"
-                  >
-                    Read Less
-                  </button>
-                </>
+              {/* ===== READ MORE / LESS ===== */}
+              {active?.content?.split(" ").length > 100 && (
+                <button
+                  onClick={() => setShowFullText(!showFullText)}
+                  className="mt-3 text-yellow-300 font-semibold underline"
+                >
+                  {showFullText ? "Read Less" : "Read More"}
+                </button>
               )}
-
             </div>
           </div>
 
-          {/* ===== QR CODE (Right-Bottom, Responsive) ===== */}
+          {/* ===== QR CODE ===== */}
           {active?.qr_code_url && (
             <div className="absolute bottom-5 right-5 flex flex-col items-center">
               <img
@@ -922,17 +908,18 @@ function ScreenView() {
               </span>
             </div>
           )}
-
         </div>
 
-        {/* ===== THUMBNAILS ROW (Responsive scroll) ===== */}
-        <div className="
-          w-full p-3 md:p-4 
-          bg-black/40 
-          flex gap-2 md:gap-4 
-          overflow-x-auto 
-          border-t border-white/30
-        ">
+        {/* ===== THUMBNAILS ===== */}
+        <div
+          className="
+            w-full p-3 md:p-4 
+            bg-black/40 
+            flex gap-2 md:gap-4 
+            overflow-x-auto 
+            border-t border-white/30
+          "
+        >
           {contents.map((c, i) => (
             <img
               key={i}
@@ -943,18 +930,24 @@ function ScreenView() {
                 h-20 w-24 md:h-28 md:w-32 
                 object-cover rounded-lg cursor-pointer 
                 border-2 md:border-4 transition-all duration-300 
-                ${activeIndex === i
-                  ? "border-yellow-400 scale-105"
-                  : "border-transparent opacity-60 hover:opacity-100"
+                ${
+                  activeIndex === i
+                    ? "border-yellow-400 scale-105"
+                    : "border-transparent opacity-60 hover:opacity-100"
                 }
               `}
             />
           ))}
         </div>
-
       </div>
     );
   };
+
+
+
+
+
+
 
   const DiagonalHomeView = () => {
     const navigate = useNavigate();

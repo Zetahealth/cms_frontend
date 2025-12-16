@@ -25,6 +25,11 @@ function ScreenContainers() {
   const [editPopup, setEditPopup] = useState(false);
 
 
+  const [confirmPopup, setConfirmPopup] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null); // "delete" | "edit"
+  const [confirmInput, setConfirmInput] = useState("");
+  const [confirmContainer, setConfirmContainer] = useState(null);
+
 
 
   const token = sessionStorage.getItem("authToken");
@@ -197,24 +202,41 @@ function ScreenContainers() {
 
 
 
-  async function deleteContainer(containerId) {
-    if (!window.confirm("Are you sure you want to delete this container?")) return;
+  // async function deleteContainer(containerId) {
+  //   if (!window.confirm("Are you sure you want to delete this container?")) return;
 
+  //   try {
+  //     const res = await fetch(`${Api}/api/v1/screen_containers/${containerId}`, {
+  //       method: "DELETE",
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+
+  //     if (!res.ok) throw new Error(`Failed to delete: ${res.status}`);
+
+  //     alert("Container deleted successfully!");
+  //     fetchContainers(); // refresh list
+  //   } catch (err) {
+  //     console.error("❌ Error deleting container:", err);
+  //     alert("Error deleting container");
+  //   }
+  // }
+
+  async function deleteContainer(containerId) {
     try {
       const res = await fetch(`${Api}/api/v1/screen_containers/${containerId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error(`Failed to delete: ${res.status}`);
+      if (!res.ok) throw new Error("Delete failed");
 
       alert("Container deleted successfully!");
-      fetchContainers(); // refresh list
+      fetchContainers();
     } catch (err) {
-      console.error("❌ Error deleting container:", err);
       alert("Error deleting container");
     }
   }
+
 
 
   async function assignScreenToContainer(containerId, screenId) {
@@ -497,139 +519,6 @@ function ScreenContainers() {
           </form>
         </section>
 
-        {/* <section className="bg-white shadow-md rounded-2xl p-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-700">
-            Existing Containers
-          </h3>
-
-          {currentContainers.map((container) => (
-            <div
-              key={container.id}
-              className="border rounded-lg p-4 mb-4 shadow-sm"
-            >
-         
-              <div className="flex items-center justify-between mb-3">
-                
-            
-                <h4 className="text-lg font-semibold">{container.name}</h4>
-
-                
-                <div className="flex items-center gap-4">
-                  <a
-                    href={`/container/${container.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Open
-                  </a>
-
-                  <button
-                    onClick={() => deleteContainer(container.id)}
-                    className="text-red-600 hover:text-red-800 font-medium"
-                  >
-                    Delete
-                  </button>
-
-                  <button
-                    onClick={() => openEdit(container)}
-                    className="text-yellow-600 hover:text-yellow-900 font-medium"
-                  >
-                    Edit
-                  </button>
-
-
-                </div>
-
-              </div>
-
-             
-              <div className="flex flex-wrap gap-2 mb-3">
-                {screens.map((s) => {
-                  const assigned = container.screens?.some(
-                    (sc) => sc.id === s.id
-                  );
-
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() =>
-                        assigned
-                          ? unassignScreenFromContainer(container.id, s.id)
-                          : assignScreenToContainer(container.id, s.id)
-                      }
-                      className={`px-4 py-2 rounded-lg text-white ${
-                        assigned
-                          ? "bg-red-500 hover:bg-red-600"
-                          : "bg-blue-500 hover:bg-blue-600"
-                      }`}
-                    >
-                      {s.name}
-                    </button>
-                  );
-                })}
-              </div>
-
-              
-              <p className="text-sm text-gray-600">
-                Assigned:{" "}
-                {container.screens?.length
-                  ? container.screens.map((sc) => sc.name).join(", ")
-                  : "None"}
-              </p>
-              <h3 className="text-lg font-semibold">More Screens :</h3>
-
-              <div className="flex flex-wrap gap-2 mb-3">
-                {screens.map((s) => {
-                  const assigned = container.subscreens?.some(
-                    (sc) => sc.id === s.id
-                  );
-
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() =>
-                        assigned
-                          ? unassignSubScreenFromContainer(container.id, s.id)
-                          : assignSubScreenToContainer(container.id, s.id)
-                      }
-                      className={`px-4 py-2 rounded-lg text-white ${
-                        assigned
-                          ? "bg-red-500 hover:bg-red-600"
-                          : "bg-blue-500 hover:bg-blue-600"
-                      }`}
-                    >
-                      {s.name}
-                    </button>
-                  );
-                })}
-              </div>
-
-
-            </div>
-          ))}
-         
-          <div className="flex justify-center gap-4 mt-6">
-            <button
-              onClick={handlePrev}
-              className="px-4 py-2 bg-gray-200 rounded-lg"
-            >
-              Previous
-            </button>
-
-            <span className="font-bold">
-              Page {currentPage} / {totalPages}
-            </span>
-
-            <button
-              onClick={handleNext}
-              className="px-4 py-2 bg-gray-200 rounded-lg"
-            >
-              Next
-            </button>
-          </div>
-        </section> */}
-
       
         <section className="bg-white shadow-md rounded-2xl p-6">
           <h3 className="text-xl font-semibold mb-4 text-gray-700">
@@ -666,7 +555,7 @@ function ScreenContainers() {
                     <div className="p-4 space-y-4 bg-white">
 
                       {/* ACTION BUTTONS */}
-                      {permission === "editor" && (
+                      
                         <>
                         <div className="flex flex-wrap items-center gap-4">
                           <a
@@ -677,20 +566,57 @@ function ScreenContainers() {
                           >
                             Open
                           </a>
+                          {permission === "editor" && (
+                          <>
+                            {/* <button
+                              onClick={() => openEdit(container)}
+                              className="px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 font-semibold hover:bg-yellow-200"
+                            >
+                              Edit
+                            </button> */}
 
-                          <button
-                            onClick={() => openEdit(container)}
-                            className="px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 font-semibold hover:bg-yellow-200"
-                          >
-                            Edit
-                          </button>
+                            <button
+                              onClick={() => {
+                                setConfirmAction("edit");
+                                setConfirmContainer(container);
+                                setConfirmInput("");
+                                setConfirmPopup(true);
+                              }}
+                              className="px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 font-semibold hover:bg-yellow-200"
+                            >
+                              Edit
+                            </button>
 
-                          <button
-                            onClick={() => deleteContainer(container.id)}
-                            className="px-4 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200"
-                          >
-                            Delete
-                          </button>
+
+
+
+                            {/* <button
+                              onClick={() => deleteContainer(container.id)}
+                              className="px-4 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200"
+                            >
+                              Delete
+                            </button> */}
+
+                            <button
+                              onClick={() => {
+                                setConfirmAction("delete");
+                                setConfirmContainer(container);
+                                setConfirmInput("");
+                                setConfirmPopup(true);
+                              }}
+                              className="px-4 py-2 rounded-lg bg-red-100 text-red-700 font-semibold hover:bg-red-200"
+                            >
+                              Delete
+                            </button>
+
+
+
+
+
+
+
+                          </>
+                          )}
                         </div>
                       
                         {/* ASSIGN SCREENS */}
@@ -726,7 +652,7 @@ function ScreenContainers() {
                           </div>
                         </div>
                       </>
-                      )}
+                      
 
                       {/* ASSIGNED LIST */}
                       <p className="text-sm text-gray-600">
@@ -1117,6 +1043,61 @@ function ScreenContainers() {
             </div>
           </div>
         )}
+
+
+        {confirmPopup && confirmContainer && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-[400px] shadow-lg">
+
+              <h3 className="text-lg font-bold mb-2 text-red-600">
+                Confirm {confirmAction === "delete" ? "Delete" : "Edit"} Container
+              </h3>
+
+              <p className="text-sm text-gray-600 mb-4">
+                Type the container name <b>"{confirmContainer.name}"</b> to continue.
+              </p>
+
+              <input
+                value={confirmInput}
+                onChange={(e) => setConfirmInput(e.target.value)}
+                placeholder="Enter container name"
+                className="w-full border rounded-lg px-4 py-2 mb-4"
+              />
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setConfirmPopup(false)}
+                  className="px-4 py-2 rounded-lg bg-gray-200"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  disabled={confirmInput !== confirmContainer.name}
+                  onClick={() => {
+                    if (confirmAction === "delete") {
+                      deleteContainer(confirmContainer.id);
+                    }
+
+                    if (confirmAction === "edit") {
+                      openEdit(confirmContainer);
+                    }
+
+                    setConfirmPopup(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg text-white ${
+                    confirmInput === confirmContainer.name
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
 
 

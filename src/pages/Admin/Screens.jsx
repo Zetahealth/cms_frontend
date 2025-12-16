@@ -49,6 +49,13 @@ function Screens() {
   const [errors, setErrors] = useState({});
 
 
+  const [confirmPopup, setConfirmPopup] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null); // "delete" | "edit"
+  const [confirmInput, setConfirmInput] = useState("");
+  const [confirmContainer, setConfirmContainer] = useState(null);
+
+
+
 
   useEffect(() => {
     fetchScreens();
@@ -522,13 +529,29 @@ function Screens() {
 
                         {permission === "editor" && (
                             <div className="flex gap-2">
-                            <button
+
+                            {/* <button
                                 onClick={() => deleteScreen(s.id)}
                                 className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200"
                             >
                                 Delete
-                            </button>
+                            </button> */}
+
                             <button
+                                onClick={() => {
+                                    setConfirmAction("delete");
+                                    setConfirmContainer(s);
+                                    setConfirmInput("");
+                                    setConfirmPopup(true);
+                                }}
+                                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200"
+                                >
+                                Delete
+                            </button>
+
+
+
+                            {/* <button
                             onClick={() => {
                                 setEditScreen(s);
                                 setEditName(s.name);
@@ -538,8 +561,28 @@ function Screens() {
                             }}
                             className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg transition duration-200"
                             >
+                                Edit
+                            </button> */}
+
+
+                            <button
+                            onClick={() => {
+                                setEditScreen(s);
+                                setEditName(s.name);
+                                setEditTitle(s.title);
+                                setEditMode(s.display_mode);
+                                
+                                setConfirmAction("edit");
+                                setConfirmContainer(s);
+                                setConfirmInput("");
+                                setConfirmPopup(true);
+                            }}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg transition duration-200"
+                            >
                             Edit
                             </button>
+
+
 
 
 
@@ -742,6 +785,66 @@ function Screens() {
             </div>
             </div>
         )}
+
+
+        {confirmPopup && confirmContainer && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-xl p-6 w-[400px] shadow-lg">
+
+                <h3 className="text-lg font-bold mb-2 text-red-600">
+                    Confirm {confirmAction === "delete" ? "Delete" : "Edit"} Container
+                </h3>
+
+                <p className="text-sm text-gray-600 mb-4">
+                    Type the container name <b>"{confirmContainer.name}"</b> to continue.
+                </p>
+
+                <input
+                    value={confirmInput}
+                    onChange={(e) => setConfirmInput(e.target.value)}
+                    placeholder="Enter container name"
+                    className="w-full border rounded-lg px-4 py-2 mb-4"
+                />
+
+                <div className="flex justify-end gap-3">
+                    <button
+                    onClick={() => setConfirmPopup(false)}
+                    className="px-4 py-2 rounded-lg bg-gray-200"
+                    >
+                    Cancel
+                    </button>
+
+                    <button
+                    disabled={confirmInput !== confirmContainer.name}
+                    onClick={() => {
+                        if (confirmAction === "delete") {
+                        // deleteContainer(confirmContainer.id);
+                            deleteScreen(confirmContainer.id)
+                        }
+
+                        if (confirmAction === "edit") {
+                            setEditPopup(true);
+                        }
+
+                        setConfirmPopup(false);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-white ${
+                        confirmInput === confirmContainer.name
+                        ? "bg-red-600 hover:bg-red-700"
+                        : "bg-gray-400 cursor-not-allowed"
+                    }`}
+                    >
+                    Confirm
+                    </button>
+                </div>
+                </div>
+            </div>
+        )}
+
+
+
+
+
     </div>
   );
 }
