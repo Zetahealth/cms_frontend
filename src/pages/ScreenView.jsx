@@ -788,16 +788,31 @@ function ScreenView() {
 
         {/* BOTTOM DESCRIPTION (single) */}
         <div
-          className="absolute bottom-6 w-[90%] sm:w-[80%] text-center text-white
-                        text-sm sm:text-base md:text-lg lg:text-xl
-                        leading-relaxed
-                        p-3 sm:p-4 md:p-5 rounded-xl"
+          className="
+    absolute bottom-2 left-0 right-0
+    w-full
+    text-center text-white
+    text-sm sm:text-base md:text-lg lg:text-xl
+    leading-relaxed
+    px-4 sm:px-6 md:px-12
+    py-3 sm:py-4 md:py-5 z-[9999]
+  "
         >
           <div
-            className="prose prose-invert font-allerta max-w-none"
-            dangerouslySetInnerHTML={{ __html: contents[activeIndex]?.content || "" }}
+            className="
+      font-allerta
+      w-full max-w-none
+      mx-auto 
+    "
+            dangerouslySetInnerHTML={{
+              __html:
+                contents?.[activeIndex]?.content?.trim()
+                  ? contents[activeIndex].content
+                  : contents?.[0]?.content || "",
+            }}
           />
         </div>
+
 
       </div>
     );
@@ -883,7 +898,13 @@ function ScreenView() {
                   transition-all duration-300
                   ${showFullText ? "" : "max-h-[200px] md:max-h-[260px] overflow-hidden"}
                 `}
-                dangerouslySetInnerHTML={{ __html: active?.content }}
+                dangerouslySetInnerHTML={{
+                  __html:
+                    active?.content?.trim()
+                      ? active.content
+                      : contents?.[0]?.content || "",
+                }}
+
               />
 
               {/* ===== READ MORE / LESS ===== */}
@@ -1704,16 +1725,65 @@ function ScreenView() {
 
   // =============================================================
 
-  const PresentationShowcaseView = () => {
-    // SLIDE NAVIGATION
-    const prev = () =>
-      setActiveIndex((prev) => (prev === 0 ? contents.length - 1 : prev - 1));
-    const next = () =>
-      setActiveIndex((prev) => (prev === contents.length - 1 ? 0 : prev + 1));
 
-    // EXTENDED: Circular Position Logic (supports left3 / right3)
+  const PresentationShowcaseView = ({
+    contents = [],
+    background,
+    container,
+    containerLogo,
+    morepage,
+    activeIndex,
+    setActiveIndex,
+    setSelected,
+    setMode,
+  }) => {
+    const navigate = useNavigate();
+
+    // =========================
+    // ADDITION 1: YEAR EXTRACTOR
+    // =========================
+    const getYearFromDob = (dob) => {
+      if (!dob || typeof dob !== "string") return null;
+
+      // exact year like "1965"
+      if (/^\d{4}$/.test(dob)) return parseInt(dob, 10);
+
+      // extract year from text like "1917–1989"
+      const match = dob.match(/\b(18|19|20)\d{2}\b/);
+      return match ? parseInt(match[0], 10) : null;
+    };
+
+    // =========================
+    // ADDITION 2: SORT CONTENTS
+    // (NO DOB → LAST)
+    // =========================
+    const orderedContents = [...contents].sort((a, b) => {
+      const yearA = getYearFromDob(a.dob);
+      const yearB = getYearFromDob(b.dob);
+
+      if (yearA === null && yearB === null) return 0;
+      if (yearA === null) return 1;
+      if (yearB === null) return -1;
+
+      return yearA - yearB; // oldest → newest
+    });
+
+    // =========================
+    // ORIGINAL CODE (UNCHANGED)
+    // =========================
+
+    const prev = () =>
+      setActiveIndex((prev) =>
+        prev === 0 ? orderedContents.length - 1 : prev - 1
+      );
+
+    const next = () =>
+      setActiveIndex((prev) =>
+        prev === orderedContents.length - 1 ? 0 : prev + 1
+      );
+
     const getPosition = (index) => {
-      const total = contents.length;
+      const total = orderedContents.length;
       if (total === 0) return "hidden";
 
       const diff = (index - activeIndex + total) % total;
@@ -1730,7 +1800,7 @@ function ScreenView() {
       return "hidden";
     };
 
-    const active = contents[activeIndex];
+    const active = orderedContents[activeIndex];
 
     return (
       <div
@@ -1758,13 +1828,11 @@ function ScreenView() {
 
         {/* SLIDER */}
         <div className="relative w-full h-[60%] sm:h-[65%] md:h-[70%] flex items-center justify-center">
-          {contents.map((c, index) => {
+          {orderedContents.map((c, index) => {
             const pos = getPosition(index);
 
-            // BASE STYLE (common)
             let style = {
               position: "absolute",
-
               overflow: "hidden",
               transition: "all 0.6s ease",
               opacity: 0.3,
@@ -1773,17 +1841,16 @@ function ScreenView() {
               display: "none",
             };
 
-            // Offsets and sizes
-            const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-            const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
+            const isMobile =
+              typeof window !== "undefined" && window.innerWidth < 768;
+            const vw =
+              typeof window !== "undefined" ? window.innerWidth : 1200;
 
-            // size choices
             const centerWidth = isMobile ? "86vw" : "24vw";
             const centerHeight = isMobile ? "56vh" : "60vh";
             const sideWidth = isMobile ? "28vw" : "180px";
             const sideHeight = isMobile ? "36vh" : "42vh";
 
-            // helper: convert css value (vw/px) to px
             const toPx = (css) => {
               if (!css) return 200;
               if (typeof css !== "string") return Number(css) || 200;
@@ -1792,22 +1859,25 @@ function ScreenView() {
               return parseFloat(css) || 200;
             };
 
-            const applyStyle = (multiplier, widthCss, heightCss, scaleVal, opacityVal, z) => {
+            const applyStyle = (
+              multiplier,
+              widthCss,
+              heightCss,
+              scaleVal,
+              opacityVal,
+              z
+            ) => {
               const centerPx = toPx(centerWidth);
               const sidePx = toPx(sideWidth);
-
-              // Minimum gap required to avoid overlap
               const base = Math.ceil(centerPx / 2 + sidePx / 2);
 
-              // Your custom spacing rules
               let extra = 0;
+              if (Math.abs(multiplier) === 1) extra = 5;
+              if (Math.abs(multiplier) === 2) extra = -90;
+              if (Math.abs(multiplier) === 3) extra = -200;
 
-              if (Math.abs(multiplier) === 1) extra = 5;        // first layer
-              if (Math.abs(multiplier) === 2) extra = -90; // second layer
-              if (Math.abs(multiplier) === 3) extra = -200;     // third layer
-
-              // Final offset calculation
-              const offsetPx = multiplier * base + Math.sign(multiplier) * extra;
+              const offsetPx =
+                multiplier * base + Math.sign(multiplier) * extra;
 
               style.display = "block";
               style.left = "50%";
@@ -1818,7 +1888,6 @@ function ScreenView() {
               style.zIndex = z;
             };
 
-            // POSITION LOGIC with improved spacing and sizes
             if (pos === "center") {
               applyStyle(0, centerWidth, centerHeight, 1, 1, 60);
               style.filter = "grayscale(0%)";
@@ -1834,49 +1903,45 @@ function ScreenView() {
               applyStyle(-3, sideWidth, sideHeight, 0.78, 0.85, 30);
             } else if (pos === "right3") {
               applyStyle(3, sideWidth, sideHeight, 0.78, 0.85, 30);
-            } else if (pos === "hidden") {
+            } else {
               style.display = "none";
               style.opacity = 0;
               style.zIndex = 5;
             }
 
-            // CLICK HANDLER
             const handleClick = () => {
               if (pos.startsWith("left")) prev();
               else if (pos.startsWith("right")) next();
               else if (pos === "center") {
                 setSelected(c);
-                if (c.has_subcontent) setMode("slider-thumb");
+                setMode("slider-thumb");
               }
             };
 
-            // guard image src (avoid empty string causing warning)
             const imgSrc =
-              c?.files?.[0] && typeof c.files[0] === "string" && c.files[0].trim() !== ""
+              c?.files?.[0] &&
+                typeof c.files[0] === "string" &&
+                c.files[0].trim() !== ""
                 ? c.files[0]
                 : null;
 
             return (
-              <>
+              <React.Fragment key={c.id ?? index}>
                 <motion.div
-                  key={c.id ?? index}
                   style={style}
                   onClick={handleClick}
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: style.opacity, transform: style.transform }}
+                  animate={{
+                    opacity: style.opacity,
+                    transform: style.transform,
+                  }}
                   transition={{ duration: 0.55 }}
                 >
                   {imgSrc ? (
                     <img
                       src={imgSrc}
-                      className="w-full h-full object-cover bg-black/5"
+                      className="w-full h-full object-cover bg-black/5 cursor-pointer"
                       alt={c.title || "slide image"}
-                      style={{
-                        objectPosition: "center center",
-                        display: "block",
-                        height: "100%",
-                        width: "100%",
-                      }}
                     />
                   ) : (
                     <div className="flex items-center justify-center w-full h-full bg-black/70 text-white">
@@ -1885,25 +1950,27 @@ function ScreenView() {
                   )}
                 </motion.div>
 
-                {/* ⭐ TITLE RENDERED OUTSIDE THE MOTION.DIV */}
                 {pos === "center" && (
                   <div className="absolute -bottom-14 w-full text-center">
                     <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-xl">
                       {c.title}
                     </h2>
-                    <h4 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-xl">
-                      {c.dob}
-                    </h4>
+                    {c.dob && (
+                      <h4 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-xl">
+                        {c.dob}
+                      </h4>
+                    )}
                   </div>
                 )}
-              </>
+              </React.Fragment>
             );
-
           })}
         </div>
       </div>
     );
   };
+
+
 
 
   const SliderThumbnailGalleryView = () => {
@@ -1913,6 +1980,15 @@ function ScreenView() {
       selected.files?.[0],
       ...(selected.sub_contents?.[0]?.gallery_images || [])
     ];
+
+    const primaryDescription =
+      selected?.sub_contents?.[0]?.description ||
+      selected?.content ||
+      "";
+
+    const individualContent =
+      selected?.sub_contents?.[0]?.individual_contents ||
+      "";
 
     const [activeIndex, setActiveIndex] = useState(0);
     const activeImage = images[activeIndex];
@@ -1942,12 +2018,12 @@ function ScreenView() {
 
         {/* TOP RIGHT LOGO */}
         <div
-          className="absolute top-6 right-8 cursor-pointer z-[999]"
+          className="absolute top-2 right-4 cursor-pointer z-[999]"
           onClick={() => setMode("slider-thumbnail-view")}
         >
           <img
             src={selected.logo || containerLogo}
-            className="h-16 md:h-40 object-contain drop-shadow-xl"
+            className="h-16 md:h-36 object-contain drop-shadow-xl"
             alt="logo"
           />
         </div>
@@ -2000,14 +2076,17 @@ function ScreenView() {
                   {selected.title} ({selected.dob})
                 </h1>
 
-                <h2 className="text-lg md:text-2xl opacity-90 mb-6">
-                  {selected.sub_contents?.[0]?.individual_contents || " "}
-                </h2>
-
-                <SplitByLines
-                  html={selected.sub_contents?.[0]?.description || selected.description || ""}
-                  lines={6}
-                />
+                {individualContent && (
+                  <h2 className="text-lg md:!text-2xl opacity-90 mb-6">
+                    {individualContent}
+                  </h2>
+                )}
+                <div className="text-xl">
+                  <SplitByLines
+                    html={primaryDescription}
+                    lines={6}
+                  />
+                </div>
 
                 {selected.qr_code_url && (
                   <div className="absolute bottom-0 right-8 flex flex-col items-center pb-4 mt-8">
@@ -4065,7 +4144,7 @@ function ScreenView() {
   //             <img
   //               src={centerItem?.image}
   //               className="h-[55vh] object-contain drop-shadow-xl"
-                
+
   //             />
   //           </div>
   //           <p className="text-center mt-6 text-xl font-semibold">
@@ -5083,7 +5162,20 @@ function ScreenView() {
       }
       {mode === "detail" && <DetailView />}
 
-      {mode === "slider-thumbnail-view" && <PresentationShowcaseView />}
+      {mode === "slider-thumbnail-view" && (
+        <PresentationShowcaseView
+          contents={contents}
+          background={background}
+          container={container}
+          containerLogo={containerLogo}
+          morepage={morepage}
+          activeIndex={activeIndex}
+          setActiveIndex={setActiveIndex}
+          setSelected={setSelected}
+          setMode={setMode}
+        />
+      )}
+
       {mode === 'slider-thumb' && <SliderThumbnailGalleryView />}
       {mode === 'article-view' && <ArticleShowcaseView />}
       {mode === 'detail-article-view' && <DetailArticleView />}
