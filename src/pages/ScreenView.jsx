@@ -933,10 +933,9 @@ function ScreenView() {
                 h-20 w-24 md:h-28 md:w-32 
                 object-cover rounded-lg cursor-pointer 
                 border-2 md:border-4 transition-all duration-300 
-                ${
-                  activeIndex === i
-                    ? "border-yellow-400 scale-105"
-                    : "border-transparent opacity-60 hover:opacity-100"
+                ${activeIndex === i
+                  ? "border-yellow-400 scale-105"
+                  : "border-transparent opacity-60 hover:opacity-100"
                 }
               `}
             />
@@ -947,18 +946,20 @@ function ScreenView() {
   };
 
 
+  const DiagonalHomeView = ({
+    contents,
+    background,
+    containerLogo,
+    screenName,
+  }) => {
 
-
-
-
-
-  const DiagonalHomeView = () => {
     const navigate = useNavigate();
     const overlapVW = 11;
     const [logoAnimated, setLogoAnimated] = useState(false);
     useEffect(() => {
       setLogoAnimated(true);  // start animating
     }, []);
+
 
 
     return (
@@ -1044,10 +1045,23 @@ function ScreenView() {
                     />
                   )}
 
-                  <p className="text-white text-xl md:text-3xl font-bold mt-4 
-                                drop-shadow-2xl tracking-wide uppercase text-center">
+                  <p
+                    className={`
+                              w-[400px]
+                              leading-snug
+                              break-words
+                              text-xl md:text-3xl font-bold mt-4
+                              drop-shadow-2xl tracking-wide uppercase text-center
+                              ${screenName === "PRESIDENT ACCOMPLISHMENT"
+                        ? "text-yellow-400"
+                        : "text-white"
+                      }
+                            `}
+                  >
                     {item.title}
                   </p>
+
+
 
                 </div>
               </div>
@@ -1063,6 +1077,11 @@ function ScreenView() {
 
   const DetailView = () => {
     if (!selected) return null;
+
+    const activeContent = selected?.contents?.[0]; // default first item
+    const [expanded, setExpanded] = useState(false);
+
+
     console.log("-----------------selected---------------", selected)
     // READ MORE state
     // Slide-in animation (Right → Left)
@@ -1096,7 +1115,7 @@ function ScreenView() {
 
     return (
       <div
-        className="relative w-full h-screen text-white"
+        className="relative w-full min-h-screen text-white"
         style={{
           backgroundImage: `url(${selected.background_url || background})`,
           backgroundSize: "cover",
@@ -1110,12 +1129,7 @@ function ScreenView() {
           className="absolute top-4 left-4 z-[999] cursor-pointer 
              bg-black/30 backdrop-blur-md p-2 rounded-xl 
              hover:bg-black/50 transition"
-          onClick={() => {
-            window.history.back();          // go to previous page
-            setTimeout(() => {
-              window.location.reload();     // refresh it after navigation
-            }, 100); // small delay so browser can go back first
-          }}
+          onClick={() => setMode("diagonal-split-view")}
         >
           <span className="text-white text-2xl leading-none">Back</span>
         </div>
@@ -1134,49 +1148,109 @@ function ScreenView() {
           animate="animate"
           variants={slideIn}
         >
-          {selected.logo && (
+          {(
             <div
-              className="absolute inset-0 flex items-center justify-center cursor-pointer"
+              className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer"
               onClick={() => setMode("diagonal-split-view")}
             >
-              <div className="grid">
-                <img
-                  src={selected.logo}
+              <div className="grid place-items-center gap-2 text-center">
+
+                {/* LOGO (optional) */}
+                {selected.logo && (
+                  <img
+                    src={selected.logo}
+                    className="w-32 h-32 md:w-42 md:h-42 drop-shadow-2xl"
+                    alt="Logo"
+                  />
+                )}
+
+                {/* TITLE (always visible) */}
+                <h1
                   className={`
-                              w-32 h-32 md:w-42 md:h-42 drop-shadow-2xl
-                              ${selected.title === "AIR FORCE" ? "ml-12" : ""}
-                            `}
-                  alt="Logo"
-                />
+                            font-bold
+                            ${screenName === "PRESIDENT ACCOMPLISHMENT"
+                      ? "text-yellow-600 !text-2xl mt-24"
+                      : "text-white text-2xl"
+                    }
+                          `}
+                >
+                  {selected.title}
+                </h1>
 
-                <h1 className="text-2xl font-bold mb-6">{selected.title}</h1>
               </div>
-
             </div>
           )}
+
         </motion.div>
 
         {/* === RIGHT SIDE TEXT BLOCK === */}
         <motion.div
-          className="
+          className={`
     absolute 
     top-1/2 
-    right-40 
+    right-10 
     -translate-y-1/2
     bg-black/30
-    p-8 
     border-3 border-black
-    max-w-3xl
-  "
+    transition-all duration-500 ease-in-out
+
+    ${screenName === "PRESIDENT ACCOMPLISHMENT"
+              ? expanded
+                ? "max-w-[930px] max-h-[700px] p-2"
+                : isLong
+                  ? "max-w-[930px] max-h-[360px] pl-4"
+                  : "max-w-2xl right-40 p-8"
+              : isLong
+                ? "max-w-[930px] right-10 pl-4"
+                : "max-w-2xl right-40 p-8"
+            }
+  `}
         >
-          {/* Fixed-height scrollable content (always show full HTML) */}
-          <div className="h-[300px] overflow-y-auto pr-2 user-content">
-            <div
-              className="text-xl leading-relaxed whitespace-pre-line text-justify text-white"
-              dangerouslySetInnerHTML={{ __html: fullHtml }}
-            />
-          </div>
+          {/* TITLE */}
+          {screenName === "PRESIDENT ACCOMPLISHMENT" && (
+            <h1 className="text-yellow-400 !text-2xl font-bold text-center">
+              {selected.title}
+            </h1>
+          )}
+
+          {/* CONTENT */}
+          <div
+            className={`
+      user-content
+      text-xl leading-relaxed whitespace-pre-line text-justify text-white
+      hide-scrollbar
+      transition-all duration-500 ease-in-out
+      overflow-y-auto
+      pr-4
+
+      ${screenName === "PRESIDENT ACCOMPLISHMENT"
+                ? expanded
+                  ? "max-h-[520px] pb-6"
+                  : isLong
+                    ? "max-h-[260px]"
+                    : "max-h-fit"
+                : isLong
+                  ? "max-h-[750px] py-6"
+                  : "max-h-fit"
+              }
+    `}
+            dangerouslySetInnerHTML={{ __html: fullHtml }}
+          />
+
+          {/* READ MORE / LESS — ALWAYS AT BOTTOM */}
+          {screenName === "PRESIDENT ACCOMPLISHMENT" && isLong && (
+            <div className="flex justify-center mt-2">
+              <button
+                onClick={() => setExpanded((prev) => !prev)}
+                className="text-yellow-400 font-semibold tracking-wide hover:underline"
+              >
+                {expanded ? "Read Less" : "Read More"}
+              </button>
+            </div>
+          )}
         </motion.div>
+
+
 
 
         {/* === QR CODE (BOTTOM RIGHT) === */}
@@ -1188,8 +1262,6 @@ function ScreenView() {
       </div>
     );
   };
-
-
 
   const renderCardCarouselView = () => {
     return (
@@ -3403,64 +3475,125 @@ function ScreenView() {
 
         {/* ========== COAT OF ARMS SCREEN ========== */}
         {screen === "coat" && (
-          <div className="w-full flex flex-col items-center px-8">
+
+          <div className="w-full h-full flex flex-col items-center px-12 pt-12">
+
 
             {/* TITLE */}
-            <h1 className="text-5xl font-bold mb-14 tracking-widest">
+            <h1 className="text-[52px] font-bold tracking-[0.25em] mb-4 text-white">
               COAT OF ARMS
             </h1>
 
-            {/* CENTER DISPLAY */}
-            <div className="relative flex items-center justify-center w-full max-w-5xl">
+            {/* CENTER AREA */}
+            <div className="relative flex items-center justify-center">
 
-              {/* LEFT LABELS */}
-              <div className="absolute left-0 flex flex-col gap-16 text-right text-xl">
-                <div>
-                  <p className="font-semibold">Three Stars</p>
-                </div>
-                <div>
-                  <p className="font-semibold">Sampaguita Garland</p>
-                </div>
-                <div>
-                  <p className="font-semibold">Baybayin “KA”</p>
-                </div>
-              </div>
-
-              {/* COAT OF ARMS IMAGE */}
+              {/* LOGO */}
               <img
-                src={logo}
-                className="w-80 md:w-96 drop-shadow-2xl cursor-pointer"
+                src="/images/coat-of-arms(1).png"
+                alt="Coat of Arms"
+                className="
+                  w-[220px] 
+                  md:w-[220px] 
+                  lg:w-[340px]
+                  object-contain
+                  drop-shadow-[0_30px_60px_rgba(0,0,0,0.7)]
+                  cursor-pointer
+                  transition-transform duration-300 hover:scale-105
+                "
                 onClick={() => setScreen("overview")}
               />
 
-              {/* RIGHT LABELS */}
-              <div className="absolute right-0 flex flex-col gap-16 text-left text-xl">
-                <div>
-                  <p className="font-semibold">Sun</p>
+
+              {/* ===== LEFT LABELS + LINES ===== */}
+              {/* Three Stars */}
+              <div className="absolute left-[-160px] top-[30px] flex items-center gap-3">
+                <span className="text-xl text-white opacity-90">Three Stars</span>
+                <span className="w-50 h-[1px] bg-white/70"></span>
+              </div>
+
+              {/* Sampaguita Garland */}
+              <div className="absolute left-[-300px] top-[138px] flex items-center gap-3">
+                <span className="text-xl text-white opacity-90">
+                  Sampaguita Garland
+                </span>
+                <span className="w-30 h-[1px] bg-white/70"></span>
+              </div>
+
+              {/* Baybayin KA */}
+              <div className="absolute left-[-220px] top-[210px] flex items-center gap-3">
+                <span className="text-xl text-white opacity-90">
+                  Baybayin “KA”
+                </span>
+                <span className="w-58 h-[1px] bg-white/70"></span>
+              </div>
+
+              {/* ===== RIGHT LABELS + LINES ===== */}
+              {/* Sun */}
+              <div className="absolute right-[-80px] top-[180px] flex items-center gap-3">
+                <span className="w-45 h-[1px] bg-white/70"></span>
+                <span className="text-xl text-white opacity-90">Sun</span>
+              </div>
+
+              {/* Three Pointed Stars */}
+              <div className="absolute right-[-280px] top-[250px] flex items-center gap-3">
+                <span className="w-40 h-[1px] bg-white/70"></span>
+                <span className="text-xl text-white opacity-90">
+                  Three Pointed Stars
+                </span>
+              </div>
+
+            </div>
+
+
+            {/* BOTTOM CONTENT – TRUE FULL WIDTH, NO OVERFLOW */}
+            <div
+              className="
+    absolute
+    inset-x-0
+    bottom-0
+    backdrop-blur-sm
+    bg-black/40
+  "
+            >
+              <div className="flex justify-center gap-32 text-center text-white pb-6 pt-6">
+
+                {/* LEFT */}
+                <div className="pt-12">
+                  <p className="flex flex-col text-3xl">
+                    <strong className="my-2 text-xl opacity-80">
+                      Baybayin “KA”
+                    </strong>
+                    Field Grade Officers and <br /> Flag Officers
+                  </p>
                 </div>
+
+                {/* CENTER */}
                 <div>
-                  <p className="font-semibold">Three Pointed Stars</p>
+                  <p className="pb-2 text-4xl font-semibold tracking-widest">
+                    LOGO SYMBOLISM
+                  </p>
+
+                  <p className="mt-1 text-xl opacity-80">
+                    Sampaguita Garland & Three Pointed Stars
+                  </p>
+
+                  <p className="text-3xl leading-relaxed">
+                    Company Grade Officers
+                  </p>
+                </div>
+
+                {/* RIGHT */}
+                <div className="pt-12">
+                  <p className="flex flex-col w-64 text-3xl leading-relaxed">
+                    <strong className="text-xl opacity-80">
+                      Baybayin “KA”
+                    </strong>
+                    Kalayaan
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* BOTTOM DESCRIPTION */}
-            <div className="text-center mt-20 max-w-4xl">
-
-              <p className="text-2xl font-semibold tracking-wider">
-                LOGO SYMBOLISM
-              </p>
-
-              <p className="mt-4 text-lg opacity-80">
-                Sampaguita Garland & Three Pointed Stars
-              </p>
-
-              <div className="flex flex-wrap justify-center gap-16 mt-12 text-xl">
-                <p className="w-64">Field Grade Officers and Flag Officers</p>
-                <p className="w-64">Company Grade Officers</p>
-                <p className="w-64">Kalayaan</p>
-              </div>
-            </div>
           </div>
         )}
 
@@ -4272,7 +4405,7 @@ function ScreenView() {
     const subtitleHTML = data.content || "";
 
     return (
-      <div className="relative w-full h-screen text-white overflow-hidden">
+      <div className="relative w-full h-screen bg-black text-white overflow-hidden">
 
         {/* ========================================================== */}
         {/*  FULL SCREEN (AFTER CLICK) - THE ATTACHED SOCom SCREEN    */}
@@ -4292,17 +4425,44 @@ function ScreenView() {
             <div className="absolute inset-0 bg-black/60"></div>
 
             {/* CENTER TEXT */}
-            <div className="relative z-10 text-center px-4">
-              <h1 className="text-4xl font-bold">Armed Forces of the Philippines</h1>
-              <h2 className="text-5xl font-bold text-yellow-400 mt-4 tracking-wider">
+            <div className="relative z-10 w-screen flex flex-col items-center cursor-pointer">
+              <h1
+                className="
+                          font-bold
+                          text-white
+                          mt-4
+                          tracking-wider
+                          whitespace-nowrap
+                          leading-none
+                          flex-shrink-0
+                          !text-6xl
+                        "
+              >
+                Armed Forces of the Philippines
+              </h1>
+
+              <h2
+                className="
+                          font-bold
+                          text-yellow-400
+                          mt-4
+                          tracking-wider
+                          whitespace-nowrap
+                          leading-none
+                          flex-shrink-0
+                         !text-6xl
+                        "
+              >
                 SPECIAL OPERATIONS COMMAND
               </h2>
             </div>
 
+
+
             {/* BACK BUTTON */}
             <button
               onClick={() => setShowFullScreen(false)}
-              className="absolute bottom-10 left-10 text-3xl font-bold"
+              className="absolute bottom-10 left-10 text-3xl font-bold cursor-pointer"
             >
               BACK
             </button>
@@ -4327,38 +4487,66 @@ function ScreenView() {
         {helicopterImg && (
           <img
             src={helicopterImg}
-            className="absolute top-15 left-[20%] w-[750px] drop-shadow-2xl z-30"
+            className="absolute top-6 left-[8%] w-[700px] drop-shadow-2xl z-30"
             alt="helicopter"
           />
         )}
 
         {/* LEFT SIDE LOGO + TEXT */}
-        <div className="absolute left-50 top-[38%] -translate-y-1/2 max-w-md z-30">
+        <div className="absolute left-20 top-[45%] -translate-y-1/2 z-30 w-max">
 
           {logoImg && (
             <img
               src={logoImg}
-              className="w-40 drop-shadow-2xl mb-6 align-center"
+              className="w-40 ml-40 drop-shadow-2xl mb-6"
               alt="logo"
             />
           )}
 
-          <h2 className="text-3xl font-semibold leading-snug">{title}</h2>
+          <h2
+            className="
+                        !text-3xl
+                        font-exterabold
+                        whitespace-nowrap
+                        leading-none
+                      "
+          >
+            {title}
+          </h2>
 
           <div
-            className="text-3xl font-bold mt-2 tracking-wider text-yellow-400"
-            dangerouslySetInnerHTML={{ __html: subtitleHTML }}
-          ></div>
+            className="
+                      mt-2
+                      font-exterabold
+                      tracking-wider
+                      text-yellow-400
+                      whitespace-nowrap
+                      leading-none
+                    text-3xl
+                    "
+            dangerouslySetInnerHTML={{
+              __html: subtitleHTML?.replace(/<br\s*\/?>/gi, ' ')
+            }}
+          />
         </div>
+
 
         {/* SMOKE GIF */}
         {soldiersImg && smoke && (
           <img
             src={smoke}
             alt="smoke"
-            className="absolute right-0 bottom-0 h-[95%] w-[98%] object-cover opacity-60 z-20 pointer-events-none"
+            className="
+                    absolute -right-90 -bottom-40
+                    w-[87%] h-[120%]
+                    object-cover object-center
+                    scale-150
+                    z-20
+                    pointer-events-none
+                  "
           />
         )}
+
 
         {/* SOLDIERS IMAGE (CLICK TO OPEN FULLSCREEN) */}
         {soldiersImg && (
@@ -4372,7 +4560,7 @@ function ScreenView() {
 
         {/* BACK BUTTON */}
         <button
-          className="absolute bottom-10 left-20 text-4xl font-bold tracking-widest opacity-90 hover:opacity-100 z-30"
+          className="absolute bottom-10 left-20 text-4xl font-bold tracking-widest opacity-90 hover:opacity-100 z-30 cursor-pointer"
           onClick={() => {
             if (morepage) {
               navigate(`/container/${container}/more`);
@@ -4590,11 +4778,18 @@ function ScreenView() {
       );
       setShowInfo(false);
     };
+    const isPhilippineNaval =
+      currentpage?.title
+        ?.toString()
+        .toLowerCase()
+        .includes("philippine naval");
+
 
     return (
       <div className="relative w-full h-screen text-white overflow-hidden">
 
-        {/*  FIRST SCREEN                                         */}
+        {/* ---------------------------------------------------- */}
+        {/*  FIRST SCREEN                                        */}
         {/* ---------------------------------------------------- */}
         {!showInfo && (
           <div className="relative w-full h-full">
@@ -4602,16 +4797,34 @@ function ScreenView() {
             {/* BACKGROUND */}
             <img
               src={bgImage}
-              className="absolute inset-0 w-full h-full object-cover brightness-[0.40] blur-[1px]"
+              className="absolute inset-0 w-full h-[110%] object-cover object-center
+                    scale-125
+                   brightness-[0.45]"
+              alt="background"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent z-10"></div>
+            {/* LEFT 40% DARK | RIGHT 60% LIGHT */}
+            <div
+              className="absolute inset-0 z-10 pointer-events-none"
+              style={{
+                background: `
+            linear-gradient(
+              to right,
+              rgba(0,0,0,0.75) 0%,
+              rgba(0,0,0,0.75) 0%,
+              rgba(0,0,0,0.05) 40%,
+              rgba(0,0,0,0.05) 100%
+            )
+          `
+              }}
+            />
 
             {/* AFP LOGO - TOP LEFT */}
             {afpLogo && (
               <img
                 src={afpLogo}
                 className="absolute top-10 left-10 w-24 drop-shadow-2xl z-30"
+                alt="afp"
               />
             )}
 
@@ -4619,112 +4832,226 @@ function ScreenView() {
             {regimentLogo && (
               <img
                 src={regimentLogo}
-                className="absolute top-10 right-10 w-32 drop-shadow-2xl z-30"
+                className="absolute top-10 right-10 w-32 drop-shadow-2xl z-100"
+                alt="regiment"
               />
             )}
 
             {/* CENTER LOGO */}
-            {centerLogo && (
-              <img
-                src={centerLogo}
-                className="absolute top-[18%] left-[8%] w-[260px] drop-shadow-2xl z-30"
-              />
-            )}
+            <div className="relative w-full h-full flex z-30">
 
-            {/* TITLES - MOVED LOWER TO AVOID MERGE */}
-            <div className="absolute top-[40%] left-[8%] z-30">
+              {/* ================= LEFT SECTION (40%) ================= */}
+              <div className="w-[40%] flex flex-col justify-center items-center">
 
-              <h1 className="text-5xl font-semibold drop-shadow-2xl">
-                {currentpage?.title}
-              </h1>
+                {centerLogo && (
+                  <img
+                    src={centerLogo}
+                    alt="center"
+                    className={`
+                             h-[250px] drop-shadow-2xl mb-8 object-contain
+                              ${isPhilippineNaval ? "w-[500px]" : "w-[250px]"}
+                            `}
+                  />
+                )}
 
-              <h2 className="text-6xl font-bold text-yellow-300 mt-4 drop-shadow-2xl tracking-wide">
-                {currentpage?.individual_contents}
-              </h2>
+
+                <h1 className="!text-4xl font-semibold    drop-shadow-2xl
+                              tracking-wide
+                              w-[380px]
+                              text-center
+                              leading-snug
+                              break-words">
+                  {currentpage?.title}
+                </h1>
+
+                <h2
+                  className="
+                            !text-4xl
+                            font-bold
+                            text-yellow-300
+                            mt-2
+                            drop-shadow-2xl
+                            tracking-wide
+                            w-[380px]
+                            text-center
+                            leading-snug
+                            break-words
+                          "
+                >
+                  {currentpage?.individual_contents}
+                </h2>
+
+              </div>
+
+              {/* ================= RIGHT SECTION (60%) ================= */}
+              <div className="w-[70%] flex items-center justify-center ">
+
+                {soldierImage && (
+                  <img
+                    src={soldierImage}
+                    alt="soldier"
+                    onClick={() => setShowInfo(true)}
+                    className="
+                              absolute
+                              bottom-0        
+                              h-[95%]
+                              object-contain
+                              drop-shadow-2xl
+                              cursor-pointer
+                            "
+                  />
+                )}
+              </div>
+
+              {/* ================= BACK BUTTON ================= */}
+              <button
+                className="absolute bottom-10 left-10 text-3xl font-bold z-50 cursor-pointer"
+                onClick={() => setMode("elite-groups")}
+              >
+                BACK
+              </button>
+              <button
+                className="absolute bottom-10 left-130 text-3xl font-bold z-50 cursor-pointer"
+                onClick={() => setShowInfo(true)}
+              >
+                Info
+              </button>
+
+
             </div>
 
-            {/* SOLDIER IMAGE */}
-            {soldierImage && (
-              <img
-                src={soldierImage}
-                className="absolute bottom-0 right-0 h-[92%] drop-shadow-2xl z-40 cursor-pointer"
-                onClick={() => setShowInfo(true)}
-              />
-            )}
-
-            {/* BACK BUTTON */}
-            <button
-              className="absolute bottom-10 left-10 text-3xl font-bold z-50"
-              onClick={() => setMode("elite-groups")}
-            >
-              BACK
-            </button>
           </div>
         )}
 
-
         {/* ---------------------------------------------------- */}
-        {/*  SECOND SCREEN                                        */}
+        {/*  SECOND SCREEN                                       */}
         {/* ---------------------------------------------------- */}
         {showInfo && (
           <div
-            className="absolute inset-0 w-full h-full overflow-hidden text-white"
-            onClick={goNext}   // 👈 CLICK TO GO NEXT
+            className="absolute inset-0 w-full min-h-full overflow-hidden text-white"
+
           >
-            {/* BG */}
+            {/* BACKGROUND */}
             <img
               src={bgImage}
-              className="absolute inset-0 w-full h-full object-cover brightness-[0.30] blur-[1px] -z-20"
+              className="absolute inset-0 w-full h-[110%] object-cover object-center scale-125 brightness-[0.65]"
+              alt="background"
             />
+            {/* DARK OVERLAY */}
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm -z-10"></div>
 
-            <div className="absolute inset-0 bg-black/40 -z-10"></div>
 
-            {/* TOP LEFT */}
-            <img
-              src={afpLogo}
-              className="absolute top-10 left-10 w-28 drop-shadow-2xl z-30"
-            />
+            {/* TOP LOGOS */}
+            {afpLogo && (
+              <img
+                src={afpLogo}
+                className="absolute top-10 left-10 w-28 drop-shadow-2xl z-30"
+                alt="afp"
+              />
+            )}
 
-            {/* TOP RIGHT */}
-            <img
-              src={regimentLogo}
-              className="absolute top-10 right-10 w-32 drop-shadow-2xl z-30"
-            />
+            {regimentLogo && (
+              <img
+                src={regimentLogo}
+                className="absolute top-10 right-10 w-32 drop-shadow-2xl z-30"
+                alt="regiment"
+              />
+            )}
 
-            {/* LEFT SIDE CONTENT */}
-            <div className="absolute top-[28%] left-[8%] w-[30%] z-30">
-              <img src={centerLogo} className="w-[240px] drop-shadow-2xl mb-4" />
+            {/* MAIN TWO-COLUMN LAYOUT */}
 
-              <h1 className="text-4xl font-bold drop-shadow-lg">
-                {currentpage?.title}
-              </h1>
+            <div className="relative w-full h-full flex z-30">
 
-              <h2 className="text-5xl font-bold text-yellow-300 mt-2 drop-shadow-lg">
-                {currentpage?.individual_contents}
-              </h2>
+              {/* ================= LEFT SECTION (FIXED WIDTH) ================= */}
+              <div className="w-[550px] flex-shrink-0 flex flex-col justify-center items-center">
+
+                {centerLogo && (
+                  <img
+                    src={centerLogo}
+                    alt="center"
+                    className={`
+                              h-[250px] drop-shadow-2xl mb-8 object-contain
+                              ${isPhilippineNaval ? "w-[500px]" : "w-[250px]"}
+                            `}
+                  />
+                )}
+
+                <h1 className="
+                              !text-4xl font-semibold drop-shadow-2xl tracking-wide
+                              w-[380px] text-center leading-snug break-words
+                            ">
+                  {currentpage?.title}
+                </h1>
+
+                <h2 className="
+                              !text-4xl font-bold text-yellow-300 mt-2 drop-shadow-2xl
+                              tracking-wide w-[380px] text-center leading-snug break-words
+                            ">
+                  {currentpage?.individual_contents}
+                </h2>
+              </div>
+
+              {/* ================= RIGHT SECTION (FLEXIBLE + GROW DOWN) ================= */}
+              <div className="relative flex-1 flex flex-col justify-between pr-4">
+
+                {/* TEXT (grows downward) */}
+                <div
+                  className="
+                              mt-[17%]
+                              text-3xl leading-relaxed drop-shadow-lg text-center
+                              max-w-[1000px]
+                              ml-0
+                              overflow-visible
+                            "
+                  style={{
+                    // allow long text to overlay into left side if needed
+                    marginLeft: "-70px",
+                  }}
+                >
+                  {currentpage?.description}
+                </div>
+
+                {/* QR — ALWAYS AT BOTTOM */}
+                <div className="flex justify-end pb-10 pr-6">
+                  {qrCode && (
+                    <div className="text-center w-36">
+                      <div className="w-36 h-36 p-1 overflow-hidden rounded-sm">
+                        <img
+                          src={qrCode}
+                          className="w-full h-full object-cover scale-[1.4]"
+                          alt="QR"
+                        />
+                      </div>
+                      <p className="text-xl mt-2 font-semibold">Learn More</p>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* BACK BUTTON */}
+              <button
+                onClick={() => setShowInfo(false)}
+                className="absolute bottom-10 left-10 text-3xl font-bold z-50 cursor-pointer"
+              >
+                BACK
+              </button>
+
+              {/* Next BUTTON */}
+              <button
+                onClick={goNext}
+                className="absolute bottom-10 left-130 text-3xl font-bold z-50  cursor-pointer"
+              >
+                Next
+              </button>
+
             </div>
 
-            {/* DESCRIPTION */}
-            <p className="absolute top-[26%] right-[8%] w-[38%] text-2xl leading-relaxed drop-shadow-lg z-30">
-              {currentpage?.description}
-            </p>
-
-            {/* QR */}
-            <div className="absolute bottom-20 right-10 text-center z-30">
-              {qrCode && <img src={qrCode} className="w-36 mb-3" />}
-              <p className="text-xl font-semibold">Learn More</p>
-            </div>
-
-            {/* BACK BUTTON */}
-            <button
-              onClick={() => setShowInfo(false)}
-              className="absolute bottom-10 left-10 text-3xl font-bold z-30"
-            >
-              BACK
-            </button>
           </div>
         )}
+
       </div>
+
     );
   };
 
@@ -4746,7 +5073,14 @@ function ScreenView() {
       {mode === "card-carousel" && renderCardCarouselView()}
       {mode === "card-detail" && renderCardDetailView()}
 
-      {mode === "diagonal-split-view" && <DiagonalHomeView />}
+      {mode === "diagonal-split-view" && <DiagonalHomeView
+        contents={contents}
+        background={background}
+        containerLogo={containerLogo}
+        screenName={screenName}
+      />
+
+      }
       {mode === "detail" && <DetailView />}
 
       {mode === "slider-thumbnail-view" && <PresentationShowcaseView />}
