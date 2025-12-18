@@ -618,39 +618,41 @@ function ScreenContainers() {
                           </>
                           )}
                         </div>
-                      
+                        
                         {/* ASSIGN SCREENS */}
-                        <div>
-                          <p className="text-gray-700 font-medium mb-2">
-                            Assign / Unassign Screens:
-                          </p>
+                        {permission === "editor" && (
+                          <div>
+                            <p className="text-gray-700 font-medium mb-2">
+                              Assign / Unassign Screens:
+                            </p>
 
-                          <div className="flex flex-wrap gap-2">
-                            {screens.map((s) => {
-                              const assigned = container.screens?.some(
-                                (sc) => sc.id === s.id
-                              );
+                            <div className="flex flex-wrap gap-2">
+                              {screens.map((s) => {
+                                const assigned = container.screens?.some(
+                                  (sc) => sc.id === s.id
+                                );
 
-                              return (
-                                <button
-                                  key={s.id}
-                                  onClick={() =>
-                                    assigned
-                                      ? unassignScreenFromContainer(container.id, s.id)
-                                      : assignScreenToContainer(container.id, s.id)
-                                  }
-                                  className={`px-4 py-2 rounded-lg text-white transition ${
-                                    assigned
-                                      ? "bg-red-500 hover:bg-red-600"
-                                      : "bg-blue-500 hover:bg-blue-600"
-                                  }`}
-                                >
-                                  {s.name}
-                                </button>
-                              );
-                            })}
+                                return (
+                                  <button
+                                    key={s.id}
+                                    onClick={() =>
+                                      assigned
+                                        ? unassignScreenFromContainer(container.id, s.id)
+                                        : assignScreenToContainer(container.id, s.id)
+                                    }
+                                    className={`px-4 py-2 rounded-lg text-white transition ${
+                                      assigned
+                                        ? "bg-red-500 hover:bg-red-600"
+                                        : "bg-blue-500 hover:bg-blue-600"
+                                    }`}
+                                  >
+                                    {s.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </>
                       
 

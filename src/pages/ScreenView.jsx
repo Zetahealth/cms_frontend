@@ -4,6 +4,7 @@ import Api from "../Api/Api";
 import * as ActionCable from "@rails/actioncable";
 import { motion, AnimatePresence, number } from "framer-motion";
 import smoke from ".././../public/smoke.gif";
+import logo from "../../public/logo2.png";
 
 // const cable = ActionCable.createConsumer("ws://localhost:3000/cable");
 const cable = ActionCable.createConsumer("wss://backendafp.connectorcore.com/cable");
@@ -32,6 +33,8 @@ function ScreenView() {
 
   const [subselected, setSubselected] = useState(null)
 
+  const [insideSelected, setInsideSelected] = useState(null)
+  const [insideSelectedView, setInsideSelectedView] = useState(null)
 
   const [screenName, setScreenName] = useState(null);
   const [containerLogo, setContainerLogo] = useState(null);
@@ -3339,59 +3342,47 @@ function ScreenView() {
 
         {/* ========== OVERVIEW SCREEN ========== */}
         {screen === "overview" && (
-          <div className="text-center px-6 max-w-full h-[90%] backdrop-blur-sm bg-black/40">
+          <div className="relative w-full h-[95%] backdrop-blur-sm bg-black/40 flex flex-col items-center px-4">
 
+            {/* LOGO */}
             <img
-              src={containerLogo}
-              onClick={() => { setMode("asf"); }}
+              src={logo}
+              onClick={() => setMode("asf")}
               className="
-                absolute 
-                top-10 
-                left-1/2 
-                -translate-x-1/2 
-                w-40 md:w-48 
+                mt-8
+                w-32 sm:w-36 md:w-44
                 drop-shadow-xl
+                cursor-pointer
               "
             />
 
-            <div className="flex justify-center items-center w-full h-full">
-              <div className="text-center px-6 max-w-[75%] h-[90%] flex flex-col justify-center items-center mx-auto">
+            {/* CONTENT */}
+            <div className="flex flex-col items-center justify-center flex-1 max-w-4xl text-center">
 
-                <p className="text-2xl md:text-3xl leading-relaxed font-semibold p-6 rounded-2xl">
-                  {subselected.content}
-                </p>
+              <p className="text-xl sm:text-2xl md:text-3xl leading-relaxed font-semibold px-4 sm:px-8 mt-8">
+                {subselected.content}
+              </p>
 
+              {/* MENU */}
+              <div className="flex gap-16 sm:gap-24 md:gap-40 text-2xl sm:text-3xl md:text-4xl font-bold mt-12 tracking-widest">
+                <button
+                  onClick={() => setScreen("mission")}
+                  className="hover:text-yellow-300 transition"
+                >
+                  MISSION
+                </button>
 
-                {/* <div
-                    className="user-content text-2xl md:text-xl leading-relaxed font-semibold p-6 rounded-2xl"
-                    dangerouslySetInnerHTML={{ __html: subselected.content }}
-                  ></div> */}
-
-
-
-
-                {/* MENU */}
-                <div className="flex justify-between gap-80 text-4xl font-bold mt-16">
-                  <button
-                    onClick={() => setScreen("mission")}
-                    className="hover:text-yellow-300 tracking-widest"
-                  >
-                    MISSION
-                  </button>
-
-                  <button
-                    onClick={() => setScreen("coat")}
-                    className="hover:text-yellow-300 tracking-widest"
-                  >
-                    COAT OF ARMS
-                  </button>
-                </div>
-
+                <button
+                  onClick={() => setScreen("coat")}
+                  className="hover:text-yellow-300 transition"
+                >
+                  COAT OF ARMS
+                </button>
               </div>
             </div>
-
           </div>
         )}
+
 
         {/* ========== MISSION SCREEN ========== */}
         {screen === "mission" && (
@@ -3413,44 +3404,66 @@ function ScreenView() {
         {/* ========== COAT OF ARMS SCREEN ========== */}
         {screen === "coat" && (
           <div className="w-full flex flex-col items-center px-8">
-            <h1 className="text-5xl font-bold mb-10 tracking-widest">
+
+            {/* TITLE */}
+            <h1 className="text-5xl font-bold mb-14 tracking-widest">
               COAT OF ARMS
             </h1>
 
-            <div className="relative flex flex-col items-center">
+            {/* CENTER DISPLAY */}
+            <div className="relative flex items-center justify-center w-full max-w-5xl">
 
-              {/* Main Coat of Arms Image */}
-              <img src={containerLogo}
-                className="w-80 md:w-96 drop-shadow-2xl"
+              {/* LEFT LABELS */}
+              <div className="absolute left-0 flex flex-col gap-16 text-right text-xl">
+                <div>
+                  <p className="font-semibold">Three Stars</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Sampaguita Garland</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Baybayin “KA”</p>
+                </div>
+              </div>
+
+              {/* COAT OF ARMS IMAGE */}
+              <img
+                src={logo}
+                className="w-80 md:w-96 drop-shadow-2xl cursor-pointer"
                 onClick={() => setScreen("overview")}
-
               />
 
-              {/* Text Lines (Left / Right Descriptions) */}
-              <div className="absolute -left-32 top-10 text-xl">Three Stars</div>
-              <div className="absolute -right-32 top-10 text-lg">Sun</div>
-
-              <div className="absolute -left-40 top-40 text-lg">Sampaguita Garland</div>
-              <div className="absolute -right-40 top-40 text-lg">Three Pointed Stars</div>
-
-              <div className="absolute -left-32 top-64 text-lg">Baybayin "KA"</div>
+              {/* RIGHT LABELS */}
+              <div className="absolute right-0 flex flex-col gap-16 text-left text-xl">
+                <div>
+                  <p className="font-semibold">Sun</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Three Pointed Stars</p>
+                </div>
+              </div>
             </div>
 
-            {/* Bottom Description */}
-            <div className="text-center mt-16 text-2xl font-semibold leading-relaxed">
-              <p>LOGO SYMBOLISM</p>
+            {/* BOTTOM DESCRIPTION */}
+            <div className="text-center mt-20 max-w-4xl">
+
+              <p className="text-2xl font-semibold tracking-wider">
+                LOGO SYMBOLISM
+              </p>
+
               <p className="mt-4 text-lg opacity-80">
                 Sampaguita Garland & Three Pointed Stars
               </p>
 
-              <div className="flex justify-center gap-24 mt-10 text-xl">
-                <p className="w-56">Field Grade Officers and Flag Officers</p>
-                <p className="w-56">Company Grade Officers</p>
-                <p className="w-56">Kalayaan</p>
+              <div className="flex flex-wrap justify-center gap-16 mt-12 text-xl">
+                <p className="w-64">Field Grade Officers and Flag Officers</p>
+                <p className="w-64">Company Grade Officers</p>
+                <p className="w-64">Kalayaan</p>
               </div>
             </div>
           </div>
         )}
+
       </div>
     );
   }
@@ -3616,110 +3629,528 @@ function ScreenView() {
     const [activeIndex, setActiveIndex] = useState(1);
 
     const items = subselected?.sub_contents || [];
-
-    // 🔥 Avoid crashes when empty
     if (!items.length) return <div className="text-white">No Items Found</div>;
 
-    const safeIndex = (i) => (items.length === 0 ? 0 : (i + items.length) % items.length);
+    const safeIndex = (i) => (i + items.length) % items.length;
 
     const centerItem = items[safeIndex(activeIndex)];
     const leftItem = items[safeIndex(activeIndex - 1)];
     const rightItem = items[safeIndex(activeIndex + 1)];
 
-    const prev = () => setActiveIndex((i) => safeIndex(i - 1));
-    const next = () => setActiveIndex((i) => safeIndex(i + 1));
+    const prev = () => {
+      setActiveIndex((i) => safeIndex(i - 1));
+      setInsideSelected(null);
+    };
+
+    const next = () => {
+      setActiveIndex((i) => safeIndex(i + 1));
+      setInsideSelected(null);
+    };
 
     return (
       <div
-        className="relative w-full h-screen text-white flex items-center justify-center"
+        className="relative w-full h-screen text-white flex items-center justify-center overflow-hidden"
         style={{
           backgroundImage: `url(${background})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        {/* BACKDROP */}
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        {/* DARK BLUR OVERLAY */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
         {/* TITLE */}
-        <h1 className="absolute top-14 text-5xl font-bold tracking-widest z-30">
+        <h1 className="absolute top-12 text-5xl font-bold tracking-[0.3em] z-30">
           Evolution of AFP Uniforms
         </h1>
 
-        {/* MAIN WRAPPER */}
-        <div className="flex items-center justify-center w-[85%] z-30 mt-20">
+        {/* MAIN CAROUSEL */}
+        <div className="relative z-30 flex items-center justify-center w-[90%] mt-24">
 
           {/* LEFT ITEM */}
-          <div className="flex flex-col items-center w-1/3 opacity-60">
+          <div className="w-1/3 flex flex-col items-center scale-90 opacity-40 blur-sm transition-all">
             <img
               src={leftItem?.sub_image}
-              className="h-[45vh] object-contain drop-shadow-2xl"
+              className="h-[42vh] object-contain"
             />
-            <p className="text-center mt-4 text-lg font-medium">
+            <p className="mt-4 text-center text-lg">
               {leftItem?.title}
               <br />
-              <span className="text-sm opacity-90">{leftItem?.individual_contents}</span>
+              <span className="text-sm opacity-80">
+                {leftItem?.individual_contents}
+              </span>
             </p>
           </div>
 
           {/* CENTER ITEM */}
-          <div className="relative w-1/3 flex flex-col items-center">
-            <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl">
+          <div className="w-1/3 flex flex-col items-center scale-110 z-40">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl px-10 py-8 shadow-[0_0_80px_rgba(255,255,255,0.15)]">
               <img
                 src={centerItem?.sub_image}
-                className="h-[55vh] object-contain drop-shadow-xl"
+                className="h-[55vh] object-contain cursor-pointer"
+                onClick={() => {
+                  setInsideSelected(centerItem);
+                  setMode("UniformEvolutionDetailView");
+                }}
               />
             </div>
-            <p className="text-center mt-6 text-xl font-semibold">
+
+            <p className="mt-6 text-center text-xl font-semibold">
               {centerItem?.title}
               <br />
-              <span className="text-lg opacity-90">{centerItem?.individual_contents}</span>
+              <span className="text-lg opacity-90">
+                {centerItem?.individual_contents}
+              </span>
             </p>
           </div>
 
           {/* RIGHT ITEM */}
-          <div className="flex flex-col items-center w-1/3 opacity-60">
+          <div className="w-1/3 flex flex-col items-center scale-90 opacity-40 blur-sm transition-all">
             <img
               src={rightItem?.sub_image}
-              className="h-[45vh] object-contain drop-shadow-2xl"
+              className="h-[42vh] object-contain"
             />
-            <p className="text-center mt-4 text-lg font-medium">
+            <p className="mt-4 text-center text-lg">
               {rightItem?.title}
               <br />
-              <span className="text-sm opacity-90">{rightItem?.individual_contents}</span>
+              <span className="text-sm opacity-80">
+                {rightItem?.individual_contents}
+              </span>
             </p>
           </div>
         </div>
 
-        {/* ARROWS */}
+        {/* LEFT ARROW */}
         <div
           onClick={prev}
-          className="absolute left-[22%] top-1/2 -translate-y-1/2 cursor-pointer opacity-80 hover:opacity-100 z-40"
+          className="absolute left-[18%] top-1/2 -translate-y-1/2 cursor-pointer opacity-70 hover:opacity-100 z-40"
         >
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="white">
+          <svg width="70" height="70" viewBox="0 0 24 24">
             <path d="M15 6l-6 6 6 6" stroke="white" strokeWidth="2" fill="none" />
           </svg>
         </div>
 
+        {/* RIGHT ARROW */}
         <div
           onClick={next}
-          className="absolute right-[22%] top-1/2 -translate-y-1/2 cursor-pointer opacity-80 hover:opacity-100 z-40"
+          className="absolute right-[18%] top-1/2 -translate-y-1/2 cursor-pointer opacity-70 hover:opacity-100 z-40"
         >
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="white">
+          <svg width="70" height="70" viewBox="0 0 24 24">
             <path d="M9 6l6 6-6 6" stroke="white" strokeWidth="2" fill="none" />
           </svg>
         </div>
 
-        {/* BACK BUTTON */}
+        {/* BACK */}
         <div
-          onClick={() => { setMode("asf"); }}
-          className="absolute bottom-10 left-20 cursor-pointer text-4xl font-bold tracking-widest opacity-80 hover:opacity-100 z-50"
+          onClick={() => setMode("asf")}
+          className="absolute bottom-10 left-20 text-4xl font-bold tracking-widest cursor-pointer opacity-80 hover:opacity-100 z-50"
         >
           BACK
         </div>
       </div>
     );
   };
+
+
+
+  const UniformEvolutionSecond = () => {
+    const [activeIndex, setActiveIndex] = useState(1);
+
+    const items = insideSelected?.asf_blocks || [];
+    if (!items.length) return <div className="text-white">No Items Found</div>;
+
+    const safeIndex = (i) => (i + items.length) % items.length;
+
+    const centerItem = items[safeIndex(activeIndex)];
+    const leftItem = items[safeIndex(activeIndex - 1)];
+    const rightItem = items[safeIndex(activeIndex + 1)];
+
+    const prev = () => {
+      setActiveIndex((i) => safeIndex(i - 1));
+      setInsideSelectedView(null);
+    };
+
+    const next = () => {
+      setActiveIndex((i) => safeIndex(i + 1));
+      setInsideSelectedView(null);
+    };
+
+    return (
+      <div
+        className="relative w-full h-screen text-white flex items-center justify-center overflow-hidden"
+        style={{
+          backgroundImage: `url(${background})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* DARK GLASS BACKDROP */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+
+        {/* TITLE */}
+        <h1 className="absolute top-12 text-4xl font-bold tracking-[0.25em] z-30">
+          {insideSelected?.title || "Evolution of AFP Uniforms"}
+        </h1>
+
+        {/* SUBTITLE */}
+        {insideSelected?.individual_contents && (
+          <p className="absolute top-28 text-xl font-semibold tracking-widest opacity-90 z-30">
+            {insideSelected.individual_contents}
+          </p>
+        )}
+
+        {/* MAIN CAROUSEL */}
+        <div className="relative z-30 flex items-center justify-center w-[90%] mt-40">
+
+          {/* LEFT ITEM */}
+          <div className="w-1/3 flex flex-col items-center scale-90 opacity-40 blur-sm transition-all">
+            <img
+              src={leftItem?.image}
+              className="h-[42vh] object-contain"
+            />
+            <p className="mt-4 text-center text-lg">
+              {leftItem?.title}
+            </p>
+          </div>
+
+          {/* CENTER ITEM */}
+          <div className="w-1/3 flex flex-col items-center scale-110 z-40">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl px-10 py-8 shadow-[0_0_80px_rgba(255,255,255,0.15)]">
+              <img
+                src={centerItem?.image}
+                className="h-[55vh] object-contain cursor-pointer"
+                onClick={() => {
+                  setInsideSelectedView(centerItem);
+                  setMode("UniformEvolutionSecondDetailView");
+                }}
+              />
+            </div>
+
+            <p className="mt-6 text-center text-xl font-semibold">
+              {centerItem?.title}
+            </p>
+          </div>
+
+          {/* RIGHT ITEM */}
+          <div className="w-1/3 flex flex-col items-center scale-90 opacity-40 blur-sm transition-all">
+            <img
+              src={rightItem?.image}
+              className="h-[42vh] object-contain"
+            />
+            <p className="mt-4 text-center text-lg">
+              {rightItem?.title}
+            </p>
+          </div>
+        </div>
+
+        {/* LEFT ARROW */}
+        <div
+          onClick={prev}
+          className="absolute left-[18%] top-1/2 -translate-y-1/2 cursor-pointer opacity-70 hover:opacity-100 z-40"
+        >
+          <svg width="70" height="70" viewBox="0 0 24 24">
+            <path d="M15 6l-6 6 6 6" stroke="white" strokeWidth="2" fill="none" />
+          </svg>
+        </div>
+
+        {/* RIGHT ARROW */}
+        <div
+          onClick={next}
+          className="absolute right-[18%] top-1/2 -translate-y-1/2 cursor-pointer opacity-70 hover:opacity-100 z-40"
+        >
+          <svg width="70" height="70" viewBox="0 0 24 24">
+            <path d="M9 6l6 6-6 6" stroke="white" strokeWidth="2" fill="none" />
+          </svg>
+        </div>
+
+        {/* BACK */}
+        <div
+          onClick={() => setMode("uniforms")}
+          className="absolute bottom-10 left-20 text-4xl font-bold tracking-widest cursor-pointer opacity-80 hover:opacity-100 z-50"
+        >
+          BACK
+        </div>
+      </div>
+    );
+  };
+
+
+  // const UniformEvolutionDetailView = () => {
+  //   const [activeIndex, setActiveIndex] = useState(1);
+  //   console.log("insideSelectedView------------------", insideSelectedView)
+
+  //   const items = insideSelectedView?.items || [];
+
+  //   // 🔥 Avoid crashes when empty
+  //   if (!items.length) return <div className="text-white">No Items Found</div>;
+
+  //   const safeIndex = (i) => (items.length === 0 ? 0 : (i + items.length) % items.length);
+
+  //   const centerItem = items[safeIndex(activeIndex)];
+  //   const leftItem = items[safeIndex(activeIndex - 1)];
+  //   const rightItem = items[safeIndex(activeIndex + 1)];
+
+  //   const prev = () => setActiveIndex((i) => safeIndex(i - 1));
+  //   const next = () => setActiveIndex((i) => safeIndex(i + 1));
+
+  //   return (
+  //     <div
+  //       className="relative w-full h-screen text-white flex items-center justify-center"
+  //       style={{
+  //         backgroundImage: `url(${background})`,
+  //         backgroundSize: "cover",
+  //         backgroundPosition: "center",
+  //       }}
+  //     >
+  //       {/* BACKDROP */}
+  //       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
+  //       {/* TITLE */}
+  //       <h1 className="absolute top-14 text-5xl font-bold tracking-widest z-30">
+  //         Evolution of AFP Uniforms
+  //       </h1>
+
+  //       {/* MAIN WRAPPER */}
+  //       <div className="flex items-center justify-center w-[85%] z-30 mt-20">
+
+  //         {/* LEFT ITEM */}
+  //         <div className="flex flex-col items-center w-1/3 opacity-60">
+  //           <img
+  //             src={leftItem?.image}
+  //             className="h-[45vh] object-contain drop-shadow-2xl"
+  //           />
+  //           <p className="text-center mt-4 text-lg font-medium">
+  //             {leftItem?.title}
+  //             <br />
+  //             <span className="text-sm opacity-90">{leftItem?.title}</span>
+  //           </p>
+  //         </div>
+
+  //         {/* CENTER ITEM */}
+  //         <div className="relative w-1/3 flex flex-col items-center">
+  //           <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl">
+  //             <img
+  //               src={centerItem?.image}
+  //               className="h-[55vh] object-contain drop-shadow-xl"
+                
+  //             />
+  //           </div>
+  //           <p className="text-center mt-6 text-xl font-semibold">
+  //             {centerItem?.title}
+  //             <br />
+  //             <span className="text-lg opacity-90">{centerItem?.title}</span>
+  //           </p>
+  //         </div>
+
+  //         {/* RIGHT ITEM */}
+  //         <div className="flex flex-col items-center w-1/3 opacity-60">
+  //           <img
+  //             src={rightItem?.image}
+  //             className="h-[45vh] object-contain drop-shadow-2xl"
+  //           />
+  //           <p className="text-center mt-4 text-lg font-medium">
+  //             {rightItem?.title}
+  //             <br />
+  //             <span className="text-sm opacity-90">{rightItem?.title}</span>
+  //           </p>
+  //         </div>
+  //       </div>
+
+  //       {/* ARROWS */}
+  //       <div
+  //         onClick={prev}
+  //         className="absolute left-[22%] top-1/2 -translate-y-1/2 cursor-pointer opacity-80 hover:opacity-100 z-40"
+  //       >
+  //         <svg width="60" height="60" viewBox="0 0 24 24" fill="white">
+  //           <path d="M15 6l-6 6 6 6" stroke="white" strokeWidth="2" fill="none" />
+  //         </svg>
+  //       </div>
+
+  //       <div
+  //         onClick={next}
+  //         className="absolute right-[22%] top-1/2 -translate-y-1/2 cursor-pointer opacity-80 hover:opacity-100 z-40"
+  //       >
+  //         <svg width="60" height="60" viewBox="0 0 24 24" fill="white">
+  //           <path d="M9 6l6 6-6 6" stroke="white" strokeWidth="2" fill="none" />
+  //         </svg>
+  //       </div>
+
+  //       {/* BACK BUTTON */}
+  //       <div
+  //         onClick={() => { setMode("asf"); }}
+  //         className="absolute bottom-10 left-20 cursor-pointer text-4xl font-bold tracking-widest opacity-80 hover:opacity-100 z-50"
+  //       >
+  //         BACK
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  // const UniformEvolutionDetailView = () => {
+  //   const [activeIndex, setActiveIndex] = useState(0);
+  //   console.log("insideSelectedView----000000--------------", insideSelectedView)
+  //   const items = insideSelectedView?.items || [];
+  //   if (!items.length) return <div className="text-white">No Items Found</div>;
+
+  //   const item = items[activeIndex];
+
+
+  //   return (
+  //     <div
+  //       className="relative w-full h-screen text-white"
+  //       style={{
+  //         backgroundImage: `url(${background})`,
+  //         backgroundSize: "cover",
+  //         backgroundPosition: "center",
+  //       }}
+  //     >
+  //       {/* DARK OVERLAY */}
+  //       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+  //       {/* HEADER */}
+  //       <h1 className="absolute top-10 left-16 text-4xl font-semibold tracking-wide z-30">
+  //         {insideSelectedView?.title}
+  //       </h1>
+
+  //       {/* MAIN CONTENT */}
+  //       <div className="relative z-30 flex h-full px-20 pt-28">
+
+  //         {/* LEFT – UNIFORM IMAGE */}
+  //         <div className="relative w-1/2 flex items-center justify-center">
+  //           <img
+  //             src={item?.image}
+  //             alt="Uniform Image"
+  //             className="h-[70vh] object-contain drop-shadow-2xl"
+  //           />
+
+  //           {/* EXAMPLE CALLOUTS */}
+  //           {item?.callouts?.map((c, index) => (
+  //             <div
+  //               key={index}
+  //               className="absolute text-sm flex items-center gap-2"
+  //               style={{ top: c.top, left: c.left }}
+  //             >
+  //               <span className="w-2 h-2 bg-white rounded-full" />
+  //               <span className="bg-black/70 px-2 py-1 rounded">
+  //                 {c.label}
+  //               </span>
+  //             </div>
+  //           ))}
+  //         </div>
+
+  //         {/* RIGHT – DESCRIPTION PANEL */}
+  //         <div className="w-1/2 pl-16 flex items-center">
+  //           <div className="bg-black/50 border border-white/20 rounded-2xl p-8 max-w-xl">
+  //             <p className="text-lg leading-relaxed text-white/90">
+  //               {item?.text}
+  //             </p>
+  //           </div>
+  //         </div>
+  //       </div>
+
+  //       {/* BACK BUTTON */}
+  //       <div
+  //         onClick={() => setMode("UniformEvolutionDetailView")}
+  //         className="absolute bottom-10 left-16 text-3xl font-bold tracking-widest cursor-pointer z-40"
+  //       >
+  //         BACK
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+
+  const UniformEvolutionDetailView = () => {
+    const [activeIndex] = useState(0);
+
+    const items = insideSelectedView?.items || [];
+    if (!items.length) return <div className="text-white">No Items Found</div>;
+
+    const item = items[activeIndex];
+
+    return (
+      <div
+        className="relative w-full h-screen text-white overflow-hidden"
+        style={{
+          backgroundImage: `url(${background})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* DARK CINEMATIC OVERLAY */}
+        <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+
+        {/* TITLE */}
+        <h1 className="absolute top-10 left-16 text-4xl font-semibold tracking-wide z-30">
+          {insideSelectedView?.title}
+        </h1>
+
+        {/* OPTIONAL LOGO (TOP RIGHT) */}
+        {containerLogo && (
+          <img
+            src={containerLogo}
+            alt="AFP Logo"
+            className="absolute top-8 right-16 h-20 object-contain z-30"
+          />
+        )}
+
+        {/* MAIN CONTENT */}
+        <div className="relative z-30 flex h-full px-16 pt-28">
+
+          {/* LEFT – UNIFORM FIGURE */}
+          <div className="relative w-1/2 flex items-center justify-center">
+
+            <img
+              src={item?.image}
+              alt="Uniform"
+              className="h-[75vh] object-contain drop-shadow-[0_0_60px_rgba(255,255,255,0.15)]"
+            />
+
+            {/* CALLOUT DOTS + LABELS */}
+            {item?.callouts?.map((c, index) => (
+              <div
+                key={index}
+                className="absolute flex items-center text-sm"
+                style={{ top: c.top, left: c.left }}
+              >
+                {/* DOT */}
+                <span className="w-2 h-2 bg-white rounded-full mr-2" />
+
+                {/* LINE */}
+                <span className="w-8 h-[1px] bg-white mr-2 opacity-80" />
+
+                {/* LABEL */}
+                <span className="bg-black/70 px-3 py-1 rounded-md tracking-wide">
+                  {c.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* RIGHT – DESCRIPTION PANEL */}
+          <div className="w-1/2 flex items-center pl-12">
+            <div className="bg-black/45 border border-white/20 rounded-2xl p-10 max-w-xl shadow-[0_0_60px_rgba(0,0,0,0.8)]">
+              <p className="text-lg leading-relaxed text-white/90">
+                {item?.text}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* BACK BUTTON */}
+        <div
+          onClick={() => setMode("UniformEvolutionDetailView")}
+          className="absolute bottom-10 left-16 text-4xl font-bold tracking-widest cursor-pointer opacity-80 hover:opacity-100 z-40"
+        >
+          BACK
+        </div>
+      </div>
+    );
+  };
+
+
+
+
 
 
 
@@ -4349,6 +4780,10 @@ function ScreenView() {
 
       {mode === 'elite-groups' && <SpecialOpsScreen />}
       {mode === 'elite-groups-ranger' && <ScoutRangerScreen />}
+
+      {mode === 'UniformEvolutionDetailView' && <UniformEvolutionSecond />}
+
+      {mode === 'UniformEvolutionSecondDetailView' && <UniformEvolutionDetailView />}
 
 
       {galleryOpen && renderGalleryView()}

@@ -18,6 +18,83 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
   const [qr, setQr] = useState(null);
   const [fileResetKey, setFileResetKey] = useState(Date.now());
 
+  const [asfBlocks, setAsfBlocks] = useState([
+    {
+      title: "",
+      image: null,
+      items: [{ text: "", image: null }]
+    }
+  ]);
+
+  const [unifromView, setUniformView] = useState(false);
+
+
+
+
+
+  const addGroup = () => {
+    setAsfBlocks(prev => [
+      ...prev,
+      { title: "", image: null, items: [{ text: "", image: null }] }
+    ]);
+  };
+
+  const addItem = (gIndex) => {
+    setAsfBlocks(prev =>
+      prev.map((group, gi) =>
+        gi !== gIndex
+          ? group
+          : {
+              ...group,
+              items: [...group.items, { text: "", image: null }]
+            }
+      )
+    );
+  };
+
+
+  const updateGroup = (gIndex, field, value) => {
+    const copy = [...asfBlocks];
+    copy[gIndex][field] = value;
+    setAsfBlocks(copy);
+  };
+
+  const updateItem = (gIndex, iIndex, field, value) => {
+    const copy = [...asfBlocks];
+    copy[gIndex].items[iIndex][field] = value;
+    setAsfBlocks(copy);
+  };
+
+  const removeItem = (gIndex, iIndex) => {
+    setAsfBlocks(prev =>
+      prev.map((group, gi) =>
+        gi !== gIndex
+          ? group
+          : {
+              ...group,
+              items: group.items.filter((_, ii) => ii !== iIndex)
+            }
+      )
+    );
+  };
+
+  const removeGroup = (gIndex) => {
+    setAsfBlocks(prev => prev.filter((_, i) => i !== gIndex));
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // NEW STATES
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -83,6 +160,28 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
     if (subImage2) form.append("sub_image2", subImage2);
     if (mainImage) form.append("main_image", mainImage);
 
+    form.append(
+      "asf_data",
+      JSON.stringify(
+        asfBlocks.map(group => ({
+          title: group.title,
+          items: group.items.map(i => ({ text: i.text }))
+        }))
+      )
+    );
+
+    asfBlocks.forEach((group, gIndex) => {
+      if (group.image) {
+        form.append(`asf_group_images[${gIndex}]`, group.image);
+      }
+
+      group.items.forEach((item, iIndex) => {
+        if (item.image) {
+          form.append(`asf_item_images[${gIndex}][${iIndex}]`, item.image);
+        }
+      });
+    });
+
 
     if (qr) form.append("qr_code", qr);
 
@@ -105,6 +204,14 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
       if (!res.ok) throw new Error("Upload failed");
 
       alert("Saved!");
+
+      setAsfBlocks([
+        {
+          title: "",
+          image: null,
+          items: [{ text: "", image: null }]
+        }
+      ]);
 
       // Reset form
       setTitle("");
@@ -152,7 +259,7 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
     "TriBranchShowcaseView": ["title", "content", "files" , "sub image" ,  "background" , "main image"],
     
     "gallary-detail-view": ["title","gallery","main image"],
-    "asf": ["title","sub images" , "tittle sub contents"  ],
+    "asf": ["title","sub images" , "tittle sub contents" ,"add multiple images" ],
     "elite-groups": ["title", "tittle sub content","content", "main image" ,"background" , "logo image", "logo image2"   ]
   };
 
@@ -208,7 +315,7 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
             <option value="diagonal-split-view">Diagonal Split View</option>
             <option value="card-carousel">Card Carousel</option>
             <option value="slider-thumbnail-view">Slide With Thumbnail View</option>
-            <option value="article-view">Article View</option>
+            <option value="article-view">Articles and News Blogs</option>
             <option value="weapons-view">Weapons View</option>
             <option value="TriBranchShowcaseView">Tribranch Showcase View</option>
             <option value="gallary-detail-view">GallaryDetailView</option>
@@ -393,7 +500,7 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
 
 
 
-
+        
           {/* Gallery Images */}
           {shouldShow("gallery") && (
             <div>
@@ -409,6 +516,153 @@ export default function SubContentForm({ parentContentId, editing, onSaved }) {
           )}
 
 
+
+          {shouldShow("add multiple images") && (
+            <div className="mt-6 space-y-6">
+
+              {/* UNIFORM VIEW TOGGLE */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={unifromView}
+                  onChange={(e) => setUniformView(e.target.checked)}
+                  className="h-4 w-4 accent-blue-600"
+                />
+                <label className="font-semibold text-gray-800">
+                  Enable Uniform View
+                </label>
+              </div>
+
+              {/* UNIFORM VIEW BLOCKS */}
+              {unifromView && (
+                <div className="space-y-6">
+
+                  {asfBlocks.map((group, gIndex) => (
+                    <div
+                      key={gIndex}
+                      className="relative rounded-xl border border-gray-300 bg-gray-50 p-5 space-y-4 shadow-sm"
+                    >
+                      {/* REMOVE GROUP */}
+                      {asfBlocks.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeGroup(gIndex)}
+                          className="absolute top-3 right-3 text-red-600 hover:text-red-800 text-sm font-semibold"
+                        >
+                          ✕
+                        </button>
+                      )}
+
+                      {/* GROUP TITLE */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Group Title
+                        </label>
+                        <input
+                          placeholder="Enter group title"
+                          className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={group.title}
+                          onChange={(e) =>
+                            updateGroup(gIndex, "title", e.target.value)
+                          }
+                        />
+                      </div>
+
+                      {/* GROUP IMAGE */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Group Image
+                        </label>
+                        <input
+                          type="file"
+                          className="w-full text-sm"
+                          onChange={(e) =>
+                            updateGroup(gIndex, "image", e.target.files[0])
+                          }
+                        />
+                      </div>
+
+                      {/* ITEMS */}
+                      <div className="space-y-3">
+                        <p className="font-semibold text-sm text-gray-700">
+                          Items
+                        </p>
+
+                        {group.items.map((item, iIndex) => (
+                          <div
+                            key={iIndex}
+                            className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end border rounded-lg p-3 bg-white"
+                          >
+                            {/* ITEM TEXT */}
+                            <div>
+                              <label className="block text-xs font-medium mb-1">
+                                Item Text
+                              </label>
+                              <input
+                                placeholder="Enter item text"
+                                className="w-full border rounded-md p-2 text-sm"
+                                value={item.text}
+                                onChange={(e) =>
+                                  updateItem(gIndex, iIndex, "text", e.target.value)
+                                }
+                              />
+                            </div>
+
+                            {/* ITEM IMAGE */}
+                            <div>
+                              <label className="block text-xs font-medium mb-1">
+                                Item Image
+                              </label>
+                              <input
+                                type="file"
+                                className="w-full text-sm"
+                                onChange={(e) =>
+                                  updateItem(gIndex, iIndex, "image", e.target.files[0])
+                                }
+                              />
+                            </div>
+
+                            {/* REMOVE ITEM */}
+                            {group.items.length > 1 && (
+                              <div className="col-span-full text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => removeItem(gIndex, iIndex)}
+                                  className="text-red-600 text-xs font-semibold hover:underline"
+                                >
+                                  Remove Item
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* ADD ITEM (optional) */}
+                      {/* 
+                      <button
+                        type="button"
+                        onClick={() => addItem(gIndex)}
+                        className="text-blue-600 text-sm font-semibold"
+                      >
+                        + Add Item
+                      </button>
+                      */}
+                    </div>
+                  ))}
+
+                  {/* ADD GROUP */}
+                  <button
+                    type="button"
+                    onClick={addGroup}
+                    className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-semibold"
+                  >
+                    + Add Group
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
 
           {/* Parent ID error */}

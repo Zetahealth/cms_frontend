@@ -435,7 +435,7 @@ function Screens() {
                             <option value="diagonal-split-view">Diagonal Split View</option>
                             <option value="card-carousel">Card Carousel</option>
                             <option value="slider-thumbnail-view">Slide With Thumbnail View</option>
-                            <option value="article-view">Article View</option>
+                            <option value="article-view">Articles and News Blogs</option>
                             <option value="weapons-view">Weapons View</option>
                             <option value="TriBranchShowcaseView">Tribranch Showcase View (ARTILLERIES)</option>
                             <option value="gallary-detail-view">Gallary Detail View</option>
@@ -686,7 +686,7 @@ function Screens() {
                                     <option value="diagonal-split-view">Diagonal Split View</option>
                                     <option value="card-carousel">Card Carousel</option>
                                     <option value="slider-thumbnail-view">Slide With Thumbnail View</option>
-                                    <option value="article-view">Article View</option>
+                                    <option value="article-view">Articles and News Blogs</option>
                                     <option value="weapons-view">Weapons View</option>
                                     <option value="TriBranchShowcaseView">Tribranch Showcase View (ARTILLERIES)</option>
                                     <option value="gallary-detail-view">Gallary Detail View</option>
