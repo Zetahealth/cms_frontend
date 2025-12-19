@@ -1635,7 +1635,16 @@ function ScreenView() {
 
 
   const renderGalleryView = () => {
-    const mediaFiles = selected.sub_contents?.[0].gallery_images || [];
+    // const mediaFiles = selected.sub_contents?.[0].gallery_images || [];
+    // if (mode === "subcontent-view") {
+    //   const mediaFiles = subselected?.gallery_images ||  "";
+    // }else {
+    //   const mediaFiles = selected.sub_contents?.[0].gallery_images || [];
+    // }
+    const mediaFiles =
+    mode === "sub-gallary-detail"
+      ? subselected?.gallery_images || []
+      : selected?.sub_contents?.[0]?.gallery_images || [];
 
     const isVideo = (url) => {
       return url.match(/\.(mp4|mov|webm)$/i); // Detect video formats
@@ -2830,6 +2839,7 @@ function ScreenView() {
               key={index}
               onClick={() => {
                 setSubselected(item);
+                console.log("item====---------------------------------------==============", item)
                 setMode("sub-gallary-detail");
               }}
               className="
