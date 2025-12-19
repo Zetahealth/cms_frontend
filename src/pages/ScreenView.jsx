@@ -5,6 +5,7 @@ import * as ActionCable from "@rails/actioncable";
 import { motion, AnimatePresence, number } from "framer-motion";
 import smoke from ".././../public/smoke.gif";
 import logo from "../../public/logo2.png";
+import { UNIFORM_LABELS } from "../data/uniformLabels";
 
 // const cable = ActionCable.createConsumer("ws://localhost:3000/cable");
 const cable = ActionCable.createConsumer("wss://backendafp.connectorcore.com/cable");
@@ -3027,7 +3028,7 @@ function ScreenView() {
               {/* View Gallery */}
               {selected.has_subcontent && (
                 <button
-                  onClick={() => setGalleryOpen(true)}
+                  onClick={() => SetSubgalleryOpen(true)}
                   className="w-full max-w-2xl  text-white
                               font-semibold text-lg md:text-xl py-3 md:py-4 
                               rounded-xl bg-transprent backdrop-blur-3xl shadow-3xl cursor-pointer"
@@ -3158,39 +3159,47 @@ function ScreenView() {
             w-full max-w-6xl 
             bg-black/70 border border-white/10 
             rounded-3xl shadow-2xl
-            p-10
-            mt-10
+            p-4
+           
             flex flex-col
             items-center
           "
         >
           {/* BACK BUTTON */}
-          <div
-            onClick={() => SetSubgalleryOpen(false)}
-            className="cursor-pointer flex items-center gap-3 mb-4 self-start"
-          >
-            <span className="text-white text-2xl font-bold drop-shadow">←</span>
-            <p className="text-xl font-bold drop-shadow">BACK</p>
-          </div>
+          <div className="grid grid-cols-3 items-center">
 
-          {/* TITLE */}
-          <h1 className="text-2xl md:text-2xl font-bold text-center mb-8">
-            View Gallery
-          </h1>
+            {/* BACK BUTTON (Left aligned) */}
+            <div
+              onClick={() => SetSubgalleryOpen(false)}
+              className="cursor-pointer flex items-center gap-3 mb-4 justify-start"
+            >
+              <span className="text-white text-2xl font-bold drop-shadow">←</span>
+              <p className="text-xl font-bold drop-shadow">BACK</p>
+            </div>
+
+            {/* CENTER TITLE */}
+            <h1 className="text-2xl md:text-2xl font-bold text-center mb-8">
+              View Gallery
+            </h1>
+
+            {/* EMPTY RIGHT SIDE — to keep the title perfectly centered */}
+            <div></div>
+          </div>
 
           {/* SCROLLABLE GRID */}
           <div
             className="
-              grid 
-              grid-cols-1 
-              sm:grid-cols-2 
-              md:grid-cols-3 
-              gap-8
-              w-full
-              overflow-y-auto
-              pr-3
-            "
-            style={{ maxHeight: "65vh" }}
+                      grid 
+                      grid-cols-1 
+                      sm:grid-cols-2 
+                      md:grid-cols-3 
+                      gap-4
+                      w-full
+                      overflow-y-auto
+                      pr-3
+                      hide-scrollbar
+                    "
+            style={{ maxHeight: "75vh" }}
           >
             {mediaFiles.map((file, i) => (
               <div key={i} className="w-full h-60 md:h-64 rounded-xl shadow-xl overflow-hidden border border-white/20">
@@ -3637,12 +3646,12 @@ function ScreenView() {
             {/* BOTTOM CONTENT – TRUE FULL WIDTH, NO OVERFLOW */}
             <div
               className="
-    absolute
-    inset-x-0
-    bottom-0
-    backdrop-blur-sm
-    bg-black/40
-  "
+                absolute
+                inset-x-0
+                bottom-0
+                backdrop-blur-sm
+                bg-black/40
+              "
             >
               <div className="flex justify-center gap-32 text-center text-white pb-6 pt-6">
 
@@ -3846,12 +3855,13 @@ function ScreenView() {
   };
 
 
-
   const UniformEvolution = () => {
     const [activeIndex, setActiveIndex] = useState(1);
 
     const items = subselected?.sub_contents || [];
-    if (!items.length) return <div className="text-white">No Items Found</div>;
+    if (!items.length) {
+      return <div className="text-white">No Items Found</div>;
+    }
 
     const safeIndex = (i) => (i + items.length) % items.length;
 
@@ -3911,8 +3921,31 @@ function ScreenView() {
                 src={centerItem?.sub_image}
                 className="h-[55vh] object-contain cursor-pointer"
                 onClick={() => {
+                  console.log(
+                    "LEVEL 1 selected:",
+                    centerItem?.id,
+                    centerItem?.title
+                  );
+
                   setInsideSelected(centerItem);
-                  setMode("UniformEvolutionDetailView");
+
+                  // 🔑 MERGED FUNCTIONALITY (from second code)
+                  const hasChildren =
+                    Array.isArray(centerItem?.sub_contents) &&
+                    centerItem.sub_contents.some(
+                      (sc) =>
+                        Array.isArray(sc.asf_blocks) &&
+                        sc.asf_blocks.length > 0
+                    );
+
+                  if (hasChildren) {
+                    // go to level 2 carousel
+                    setMode("uniforms-second");
+                  } else {
+                    // go directly to detail view
+                    setInsideSelectedView(centerItem);
+                    setMode("uniforms-detail");
+                  }
                 }}
               />
             </div>
@@ -3975,126 +4008,90 @@ function ScreenView() {
 
 
 
+
   const UniformEvolutionSecond = () => {
-    const [activeIndex, setActiveIndex] = useState(1);
+    const [activeIndex, setActiveIndex] = useState(0);
 
-    const items = insideSelected?.asf_blocks || [];
-    if (!items.length) return <div className="text-white">No Items Found</div>;
+    const items =
+      insideSelected?.sub_contents?.[0]?.asf_blocks || [];
 
-    const safeIndex = (i) => (i + items.length) % items.length;
+    if (!items.length) {
+      return (
+        <div className="flex items-center justify-center h-screen text-white">
+          No Uniforms Found
+        </div>
+      );
+    }
 
-    const centerItem = items[safeIndex(activeIndex)];
-    const leftItem = items[safeIndex(activeIndex - 1)];
-    const rightItem = items[safeIndex(activeIndex + 1)];
-
-    const prev = () => {
-      setActiveIndex((i) => safeIndex(i - 1));
-      setInsideSelectedView(null);
-    };
-
-    const next = () => {
-      setActiveIndex((i) => safeIndex(i + 1));
-      setInsideSelectedView(null);
-    };
+    const safe = (i) => (i + items.length) % items.length;
+    const center = items[safe(activeIndex)];
+    const left = items[safe(activeIndex - 1)];
+    const right = items[safe(activeIndex + 1)];
 
     return (
-      <div
-        className="relative w-full h-screen text-white flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage: `url(${background})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        {/* DARK GLASS BACKDROP */}
+      <div className="relative w-full h-screen text-white overflow-hidden">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
-        {/* TITLE */}
-        <h1 className="absolute top-12 text-4xl font-bold tracking-[0.25em] z-30">
-          {insideSelected?.title || "Evolution of AFP Uniforms"}
+        <h1 className="absolute top-12 text-4xl font-bold text-center w-full z-30">
+          {insideSelected?.title}
         </h1>
 
-        {/* SUBTITLE */}
-        {insideSelected?.individual_contents && (
-          <p className="absolute top-28 text-xl font-semibold tracking-widest opacity-90 z-30">
-            {insideSelected.individual_contents}
-          </p>
-        )}
+        <div className="relative z-30 flex w-[90%] mt-40 mx-auto">
 
-        {/* MAIN CAROUSEL */}
-        <div className="relative z-30 flex items-center justify-center w-[90%] mt-40">
+          {/* LEFT */}
+          <div className="w-1/3 opacity-40 blur-sm scale-90 text-center">
+            <img src={left?.image || left?.sub_image} className="h-[40vh] mx-auto object-contain" />
+            <p>{left?.title}</p>
+          </div>
 
-          {/* LEFT ITEM */}
-          <div className="w-1/3 flex flex-col items-center scale-90 opacity-40 blur-sm transition-all">
+          {/* CENTER */}
+          <div className="w-1/3 scale-110 text-center z-40">
             <img
-              src={leftItem?.image}
-              className="h-[42vh] object-contain"
+              src={center?.image || center?.sub_image}
+              className="h-[55vh] mx-auto object-contain cursor-pointer"
+              onClick={() => {
+                console.log("LEVEL 2 selected:", center.id, center.title);
+                setInsideSelectedView(center);
+                setMode("uniforms-detail");
+              }}
             />
-            <p className="mt-4 text-center text-lg">
-              {leftItem?.title}
-            </p>
+            <p className="mt-4 text-xl font-semibold">{center?.title}</p>
           </div>
 
-          {/* CENTER ITEM */}
-          <div className="w-1/3 flex flex-col items-center scale-110 z-40">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl px-10 py-8 shadow-[0_0_80px_rgba(255,255,255,0.15)]">
-              <img
-                src={centerItem?.image}
-                className="h-[55vh] object-contain cursor-pointer"
-                onClick={() => {
-                  setInsideSelectedView(centerItem);
-                  setMode("UniformEvolutionSecondDetailView");
-                }}
-              />
-            </div>
-
-            <p className="mt-6 text-center text-xl font-semibold">
-              {centerItem?.title}
-            </p>
-          </div>
-
-          {/* RIGHT ITEM */}
-          <div className="w-1/3 flex flex-col items-center scale-90 opacity-40 blur-sm transition-all">
-            <img
-              src={rightItem?.image}
-              className="h-[42vh] object-contain"
-            />
-            <p className="mt-4 text-center text-lg">
-              {rightItem?.title}
-            </p>
+          {/* RIGHT */}
+          <div className="w-1/3 opacity-40 blur-sm scale-90 text-center">
+            <img src={right?.image || right?.sub_image} className="h-[40vh] mx-auto object-contain" />
+            <p>{right?.title}</p>
           </div>
         </div>
 
-        {/* LEFT ARROW */}
-        <div
-          onClick={prev}
-          className="absolute left-[18%] top-1/2 -translate-y-1/2 cursor-pointer opacity-70 hover:opacity-100 z-40"
+        <button
+          onClick={() => setActiveIndex(activeIndex - 1)}
+          className="absolute left-16 top-1/2 text-4xl"
         >
-          <svg width="70" height="70" viewBox="0 0 24 24">
-            <path d="M15 6l-6 6 6 6" stroke="white" strokeWidth="2" fill="none" />
-          </svg>
-        </div>
+          ◀
+        </button>
 
-        {/* RIGHT ARROW */}
-        <div
-          onClick={next}
-          className="absolute right-[18%] top-1/2 -translate-y-1/2 cursor-pointer opacity-70 hover:opacity-100 z-40"
+        <button
+          onClick={() => setActiveIndex(activeIndex + 1)}
+          className="absolute right-16 top-1/2 text-4xl"
         >
-          <svg width="70" height="70" viewBox="0 0 24 24">
-            <path d="M9 6l6 6-6 6" stroke="white" strokeWidth="2" fill="none" />
-          </svg>
-        </div>
+          ▶
+        </button>
 
-        {/* BACK */}
         <div
           onClick={() => setMode("uniforms")}
-          className="absolute bottom-10 left-20 text-4xl font-bold tracking-widest cursor-pointer opacity-80 hover:opacity-100 z-50"
+          className="absolute bottom-10 left-20 text-3xl cursor-pointer"
         >
           BACK
         </div>
       </div>
     );
   };
+
+
+
+
 
 
   // const UniformEvolutionDetailView = () => {
@@ -4281,14 +4278,16 @@ function ScreenView() {
   //   );
   // };
 
-
   const UniformEvolutionDetailView = () => {
-    const [activeIndex] = useState(0);
+    if (!insideSelectedView) {
+      return (
+        <div className="flex items-center justify-center h-screen text-white">
+          No Uniform Data
+        </div>
+      );
+    }
 
-    const items = insideSelectedView?.items || [];
-    if (!items.length) return <div className="text-white">No Items Found</div>;
-
-    const item = items[activeIndex];
+    const labels = UNIFORM_LABELS[insideSelectedView.id] || [];
 
     return (
       <div
@@ -4299,80 +4298,98 @@ function ScreenView() {
           backgroundPosition: "center",
         }}
       >
-        {/* DARK CINEMATIC OVERLAY */}
+        {/* DARK OVERLAY */}
         <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
 
         {/* TITLE */}
-        <h1 className="absolute top-10 left-16 text-4xl font-semibold tracking-wide z-30">
-          {insideSelectedView?.title}
+        <h1 className="absolute top-6 text-4xl font-bold text-center w-full z-30">
+          {insideSelectedView.title}
+          {insideSelectedView.individual_contents && (
+            <div className="text-3xl opacity-80 mt-2">
+              {insideSelectedView.individual_contents}
+            </div>
+          )}
         </h1>
 
-        {/* OPTIONAL LOGO (TOP RIGHT) */}
-        {containerLogo && (
-          <img
-            src={containerLogo}
-            alt="AFP Logo"
-            className="absolute top-8 right-16 h-20 object-contain z-30"
-          />
-        )}
-
-        {/* MAIN CONTENT */}
-        <div className="relative z-30 flex h-full px-16 pt-28">
-
-          {/* LEFT – UNIFORM FIGURE */}
-          <div className="relative w-1/2 flex items-center justify-center">
-
+        {/* IMAGE + LABELS */}
+        <div className="relative z-30 mt-14 flex items-center justify-center h-full">
+          <div className="relative">
+            {/* UNIFORM IMAGE */}
             <img
-              src={item?.image}
-              alt="Uniform"
-              className="h-[75vh] object-contain drop-shadow-[0_0_60px_rgba(255,255,255,0.15)]"
+              src={insideSelectedView.sub_image || insideSelectedView.image}
+              className="
+              h-[80vh]
+              object-contain
+              drop-shadow-[0_30px_60px_rgba(0,0,0,0.7)]
+            "
+              alt={insideSelectedView.title}
             />
 
-            {/* CALLOUT DOTS + LABELS */}
-            {item?.callouts?.map((c, index) => (
+            {/* STATIC LABELS */}
+            {labels.map((label, index) => {
+              const isLeft = label.side === "left";
+
+              return (
+                <div
+                  key={index}
+                  className={`absolute flex items-center gap-3 ${isLeft ? "left-[-300px]" : "right-[-300px]"
+                    }`}
+                  style={{ top: label.top }}
+                >
+                  {isLeft ? (
+                    <>
+                      <span className="text-xl w-[250px] text-center text-white opacity-90">
+                        {label.text}
+                      </span>
+                      <span className={`${label.line} h-[1px] bg-white/70`} />
+                    </>
+                  ) : (
+                    <>
+                      <span className={`${label.line} h-[1px] bg-white/70`} />
+                      <span className="text-xl w-[280px] text-center text-white opacity-90">
+                        {label.text}
+                      </span>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+            {/* FALLBACK MESSAGE (when no labels exist) */}
+            {labels.length === 0 && (
               <div
-                key={index}
-                className="absolute flex items-center text-sm"
-                style={{ top: c.top, left: c.left }}
+                className="
+      absolute
+      right-[-380px]
+      top-1/2
+      -translate-y-1/2
+      w-[360px]
+      text-center
+      pointer-events-none
+    "
               >
-                {/* DOT */}
-                <span className="w-2 h-2 bg-white rounded-full mr-2" />
-
-                {/* LINE */}
-                <span className="w-8 h-[1px] bg-white mr-2 opacity-80" />
-
-                {/* LABEL */}
-                <span className="bg-black/70 px-3 py-1 rounded-md tracking-wide">
-                  {c.label}
-                </span>
+                <p className="text-2xl leading-relaxed opacity-80">
+                  Uniform details are not available yet.
+                  <br />
+                  <span className="text-lg opacity-60">
+                    We will add them soon.
+                  </span>
+                </p>
               </div>
-            ))}
-          </div>
+            )}
 
-          {/* RIGHT – DESCRIPTION PANEL */}
-          <div className="w-1/2 flex items-center pl-12">
-            <div className="bg-black/45 border border-white/20 rounded-2xl p-10 max-w-xl shadow-[0_0_60px_rgba(0,0,0,0.8)]">
-              <p className="text-lg leading-relaxed text-white/90">
-                {item?.text}
-              </p>
-            </div>
           </div>
         </div>
 
-        {/* BACK BUTTON */}
+        {/* BACK */}
         <div
-          onClick={() => setMode("UniformEvolutionDetailView")}
-          className="absolute bottom-10 left-16 text-4xl font-bold tracking-widest cursor-pointer opacity-80 hover:opacity-100 z-40"
+          onClick={() => setMode("uniforms")}
+          className="absolute bottom-10 left-20 text-3xl cursor-pointer z-40 opacity-80 hover:opacity-100"
         >
           BACK
         </div>
       </div>
     );
   };
-
-
-
-
 
 
 
@@ -5214,12 +5231,14 @@ function ScreenView() {
 
       {mode === 'uniforms' && <UniformEvolution />}
 
+      {mode === 'uniforms-second' && <UniformEvolutionSecond />}
+
+      {mode === 'uniforms-detail' && <UniformEvolutionDetailView />}
+
+
       {mode === 'elite-groups' && <SpecialOpsScreen />}
       {mode === 'elite-groups-ranger' && <ScoutRangerScreen />}
 
-      {mode === 'UniformEvolutionDetailView' && <UniformEvolutionSecond />}
-
-      {mode === 'UniformEvolutionSecondDetailView' && <UniformEvolutionDetailView />}
 
 
       {galleryOpen && renderGalleryView()}
